@@ -10,7 +10,7 @@ contract SpookySwapper {
 
 
     IUniswapV2Router public SpookyRouter = IUniswapV2Router(0xF491e7B69E4244ad4002BC14e878a34207E38c29);
-    IERC20 public WETH = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+    IERC20 public WETH = IERC20(0x74b23882a30290451A17c44f4F05243b6b58C76d);
 
     function Swap(address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to) public {
         IERC20(_tokenIn).approve(address(SpookyRouter), _amountIn);
