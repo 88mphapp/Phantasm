@@ -3,8 +3,8 @@ pragma solidity ^0.8;
 
 import './interfaces/IPhantasm.sol';
 import './interfaces/ICompound.sol';
-import './interfaces/IUniswap.sol';
-import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import './interfaces/IUniswapV2.sol';
+import './interfaces/IERC20.sol';
 
 contract SpookySwapper {
 
