@@ -53,7 +53,7 @@ contract SpookySwapperTest is DSTest{
         console.log(TOMB.balanceOf(address(this)));
         console.log(dai.balanceOf(address(this)));
 
-         assertTrue(10000 >= dai.balanceOf(address(this)));
+         assertTrue(dai.balanceOf(address(this)) >= 10000);
 
     }
 
