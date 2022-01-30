@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.11;
 
-import "../console.sol";
+import "./utils/console.sol";
 import "../../lib/ds-test/src/test.sol";
 import {SpookySwapper} from "../SpookySwap.sol";
 import {IERC20} from "../interfaces/IERC20.sol";
