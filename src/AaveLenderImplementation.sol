@@ -5,6 +5,7 @@ pragma solidity ^0.8;
 import "./interfaces/IERC20.sol";
 import "./interfaces/IAave.sol";
 import "./interfaces/ISwapImplementation.sol";
+import "./test/utils/console.sol";
 
 
 contract AaveImplementation {
@@ -15,9 +16,9 @@ contract AaveImplementation {
         \   \
         `~~~'
     */
-    ILendingPool aaveLender = ILendingPool(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9);
+    ILendingPool aaveLender = ILendingPool(0x9FAD24f572045c7869117160A571B2e50b10d068);
 
-    address public constant DAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
+    address public constant DAI = 0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E;
 
     function leverageLong(address _asset, address _swapper, uint256 _initialCollateralAmount, uint256 _initialBorrowAmount, uint256 _borrowFactor) external returns (uint256, uint256) {
         
@@ -85,9 +86,31 @@ contract AaveImplementation {
     function deposit(
         address _asset, 
         uint256 _amount
-    ) internal {
-        //aaveLender.setUserUseReserveAsCollateral(_asset, true);
+    ) public {
+        console.log("inside deposit", msg.sender);
+        aaveLender.setUserUseReserveAsCollateral(_asset, true);
         aaveLender.deposit(_asset, _amount, address(this), 0);
+
+        console.log("inside deposit 2", msg.sender);
+
+    }
+
+    function depositMoney(uint256 _amount, uint256 _borrowME) public {
+        console.log("we in b1ois");
+
+        IERC20(DAI).transferFrom(msg.sender, address(this), _amount);
+        console.log("we in bo2is");
+
+        IERC20(DAI).approve(address(aaveLender), _amount);
+        console.log("we in bois");
+
+        deposit(DAI, _amount);
+        console.log("we in bois");
+
+        aaveLender.setUserUseReserveAsCollateral(DAI, true);
+        console.log("we in bois");
+
+        borrow(DAI,_borrowME);
     }
 
     function withdraw(
