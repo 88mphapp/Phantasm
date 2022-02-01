@@ -15,15 +15,12 @@ contract SpookySwapper {
     IERC20 public WFTM = IERC20(0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83);
 
     function Swap(address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to) public {
-        IERC20  TOMB =IERC20(0x6c021Ae822BEa943b2E66552bDe1D2696a53fbB7);
 
         IERC20(_tokenIn).transferFrom(msg.sender, address(this), _amountIn);
 
-        console.log("curreent address " , msg.sender);
 
 
         IERC20(_tokenIn).approve(address(SpookyRouter), _amountIn);
-        console.log("curreent addresss ftm balance" , msg.sender.balance);
 
         address[] memory path;
         
@@ -41,7 +38,6 @@ contract SpookySwapper {
         }
 
         SpookyRouter.swapExactTokensForTokens(_amountIn, _amountOutMin, path, _to, block.timestamp);
-        console.log("Tomb balance in send er address " , TOMB.balanceOf(msg.sender));
 
         IERC20(_tokenOut).transfer(msg.sender, IERC20(_tokenOut).balanceOf(address(this)));
     }

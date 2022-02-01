@@ -16,17 +16,17 @@ contract GeistImplementation {
         \   \
         `~~~'
     */
-    ILendingPool aaveLender = ILendingPool(0x9FAD24f572045c7869117160A571B2e50b10d068);
+    ILendingPool geistLender = ILendingPool(0x9FAD24f572045c7869117160A571B2e50b10d068);
 
     address public constant DAI = 0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E;
 
     function leverageLong(address _asset, address _swapper, uint256 _initialCollateralAmount, uint256 _initialBorrowAmount, uint256 _borrowFactor) external returns (uint256, uint256) {
         
         IERC20(_asset).transferFrom(msg.sender, address(this), _initialCollateralAmount);
-        IERC20(_asset).approve(address(aaveLender), _initialCollateralAmount);
+        IERC20(_asset).approve(address(geistLender), _initialCollateralAmount);
 
         deposit(_asset, _initialCollateralAmount);
-        aaveLender.setUserUseReserveAsCollateral(_asset, true);
+        geistLender.setUserUseReserveAsCollateral(_asset, true);
         uint256 nextBorrow = _initialCollateralAmount;
         uint256 totalBorrow;
         uint256 totalCollateral = _initialCollateralAmount;
@@ -40,7 +40,7 @@ contract GeistImplementation {
             uint256 tokensBought = swapImplementation(_swapper).swap(DAI, _asset,borrowAmount, 1, address(this));
             uint256 nextBorrow = tokensBought;
             // Re-approving each deposit sucks, but is signficiantly safer
-            IERC20(_asset).approve(address(aaveLender), tokensBought);
+            IERC20(_asset).approve(address(geistLender), tokensBought);
             deposit(_asset, tokensBought);
             totalCollateral += tokensBought;
         }
@@ -50,9 +50,9 @@ contract GeistImplementation {
 
     function leverageShort(address _asset, address _swapper, uint256 _initialCollateralAmount, uint256 _initialBorrowAmount, uint256 _borrowFactor) external returns (uint256, uint256) {
         IERC20(DAI).transferFrom(msg.sender, address(this), _initialCollateralAmount);
-        IERC20(DAI).approve(address(aaveLender), _initialCollateralAmount);
+        IERC20(DAI).approve(address(geistLender), _initialCollateralAmount);
         deposit(DAI, _initialCollateralAmount);
-        aaveLender.setUserUseReserveAsCollateral(DAI, true);
+        geistLender.setUserUseReserveAsCollateral(DAI, true);
         uint256 nextBorrow = _initialBorrowAmount;
         uint256 totalBorrow;
         uint256 totalCollateral = _initialCollateralAmount;
@@ -63,7 +63,7 @@ contract GeistImplementation {
         // (address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to
         IERC20(_asset).approve(_swapper, borrowAmount);
         uint256 tokensBought = swapImplementation(_swapper).swap(_asset,DAI,borrowAmount, 1, address(this));
-        IERC20(DAI).approve(address(aaveLender), tokensBought);
+        IERC20(DAI).approve(address(geistLender), tokensBought);
         deposit(DAI, tokensBought);
         totalCollateral += tokensBought;
     
@@ -73,7 +73,7 @@ contract GeistImplementation {
     
     function closePosition(address _debtAsset, address _asset, address _swapper, uint256 _debtOwed, uint256 _totalCollateral) public {
         IERC20(_debtAsset).transferFrom(msg.sender, address(this), _debtOwed);
-        IERC20(_debtAsset).approve(address(aaveLender), _debtOwed);
+        IERC20(_debtAsset).approve(address(geistLender), _debtOwed);
         repay(_debtAsset, _debtOwed);
         // Now with no debt, withdraw collateral
         uint256 amountWithdrawn = withdraw(_asset, _totalCollateral);
@@ -87,28 +87,26 @@ contract GeistImplementation {
         address _asset, 
         uint256 _amount
     ) public {
-        console.log("inside deposit", msg.sender);
-        aaveLender.setUserUseReserveAsCollateral(_asset, true);
-        aaveLender.deposit(_asset, _amount, address(this), 0);
+        IERC20(_asset).approve(address(geistLender), _amount);
+        //geistLender.setUserUseReserveAsCollateral(_asset, true);
 
-        console.log("inside deposit 2", msg.sender);
+        geistLender.deposit(_asset, _amount, 0x6Ab30d124cf23aEaEd9Aff8887b2E73f034796ca, 0);
 
     }
 
+
+
     function depositMoney(uint256 _amount, uint256 _borrowME) public {
-        console.log("1");
 
         IERC20(DAI).transferFrom(msg.sender, address(this), _amount);
-        console.log("2");
 
-        IERC20(DAI).approve(address(aaveLender), _amount);
-        console.log("3");
+        IERC20(DAI).approve(address(geistLender), _amount);
+        IERC20(DAI).approve(address(this), _amount);
+
 
         deposit(DAI, _amount);
-        console.log("4");
 
-        aaveLender.setUserUseReserveAsCollateral(DAI, true);
-        console.log("5");
+        geistLender.setUserUseReserveAsCollateral(DAI, true);
 
         borrow(DAI,_borrowME);
     }
@@ -117,21 +115,21 @@ contract GeistImplementation {
         address _asset,
         uint256 _amount
     ) internal returns (uint256){
-        uint256 amountReturned = aaveLender.withdraw(_asset, _amount, address(this));
+        uint256 amountReturned = geistLender.withdraw(_asset, _amount, address(this));
     }
 
     function borrow(
         address _asset,
         uint256 _amount
     ) internal {
-        aaveLender.borrow(_asset, _amount, 2, 0, address(this));
+        geistLender.borrow(_asset, _amount, 2, 0, address(this));
     }
 
     function repay(
         address _asset,
         uint256 _amount
     ) internal returns (uint256){
-        uint256 amountRepayed = aaveLender.repay(_asset, _amount, 2, address(this));
+        uint256 amountRepayed = geistLender.repay(_asset, _amount, 2, address(this));
         return amountRepayed;
     }
 }

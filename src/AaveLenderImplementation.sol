@@ -16,9 +16,9 @@ contract AaveImplementation {
         \   \
         `~~~'
     */
-    ILendingPool aaveLender = ILendingPool(0x9FAD24f572045c7869117160A571B2e50b10d068);
+    ILendingPool aaveLender = ILendingPool(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9);
 
-    address public constant DAI = 0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E;
+    address public constant DAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
 
     function leverageLong(address _asset, address _swapper, uint256 _initialCollateralAmount, uint256 _initialBorrowAmount, uint256 _borrowFactor) external returns (uint256, uint256) {
         
@@ -83,32 +83,24 @@ contract AaveImplementation {
     /*
         Internal Wrapper functions for dealing with Aave directly
     */
-    function deposit(
-        address _asset, 
-        uint256 _amount
-    ) public {
-        console.log("inside deposit", msg.sender);
-        aaveLender.setUserUseReserveAsCollateral(_asset, true);
-        aaveLender.deposit(_asset, _amount, address(this), 0);
+    function deposit( address _asset, uint256 _amount ) public {
 
-        console.log("inside deposit 2", msg.sender);
+        IERC20(_asset).approve(address(aaveLender), _amount);
+        
+        //aaveLender.setUserUseReserveAsCollateral(_asset, true);
+        aaveLender.deposit(_asset, _amount, 0xe82906b6B1B04f631D126c974Af57a3A7B6a99d9, 0);
 
     }
 
     function depositMoney(uint256 _amount, uint256 _borrowME) public {
-        console.log("we in b1ois");
 
         IERC20(DAI).transferFrom(msg.sender, address(this), _amount);
-        console.log("we in bo2is");
 
         IERC20(DAI).approve(address(aaveLender), _amount);
-        console.log("we in bois");
 
         deposit(DAI, _amount);
-        console.log("we in bois");
 
         aaveLender.setUserUseReserveAsCollateral(DAI, true);
-        console.log("we in bois");
 
         borrow(DAI,_borrowME);
     }
