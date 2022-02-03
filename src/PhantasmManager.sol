@@ -3,7 +3,6 @@ pragma solidity ^0.8;
 
 // Some interfaces are needed here
 import "./interfaces/IERC20.sol";
-import "../lib/openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
 import './interfaces/ISwapImplementation.sol';
 
 
@@ -18,7 +17,7 @@ interface bondImplementation {
     function findAndBuyYieldTokens(address _token, uint256 _amount) external returns (uint256 _amountSpent);
     function buyYieldTokens (address _assetPool, uint64 _depositId, uint256 _stableInAmount) external returns (uint64 _fundingID, uint256 fundingMultitokensMinted, uint256 actualFundAmount, uint256 principalFunded);
 }
-contract PhantasmManager is ERC721 {
+contract PhantasmManager {
 
     address private owner;
     address private immutable DAI = 0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E;
@@ -37,7 +36,7 @@ contract PhantasmManager is ERC721 {
     // Ledger holds all token ids to tokens
     mapping(uint256 => Position) private positionLedger;
     uint256 counter = 0;
-    constructor() ERC721("Phantasm Position", "SPCTR") {
+    constructor() {
         owner = msg.sender;
     }
 
@@ -51,18 +50,18 @@ contract PhantasmManager is ERC721 {
                                                                                 
                                                                                 
     */
+    mapping(uint => address) public ownership;
+
     function addPosition(Position memory _newPosition) internal returns(uint256) {
         counter++;
         //Push Position to ledger
-        positionLedger[counter] = _newPosition;
-
-        _mint(msg.sender, counter);
+        ownership[counter] = msg.sender;
         
         return counter;
     }
     
     function removePosition(uint256 _tokenID) internal {
-        _burn(_tokenID);
+        ownership[_tokenID] = address(this); // Remove ownership from Positon
 
         delete positionLedger[_tokenID];
     }
@@ -146,7 +145,7 @@ contract PhantasmManager is ERC721 {
     }
 
     function closeLongPosition(uint256 _tokenID, uint8 _swapImplementation, uint256 _interestAccured) public {
-            require(ownerOf(_tokenID) == msg.sender, "You have to own something to get it's value");
+            require(ownership[_tokenID] == msg.sender, "You have to own something to get it's value");
             Position memory liquidateMe = viewPosition(_tokenID);
             //swap(address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to)
             // DAI to repay
@@ -184,7 +183,7 @@ contract PhantasmManager is ERC721 {
             return PositionID;
         }
         function closeShortPosition(uint256 _tokenID, uint8 _swapImplementation, uint256 _interestAccured) public {
-            require(ownerOf(_tokenID) == msg.sender, "You have to own something to get it's value");
+            require(ownership[_tokenID] == msg.sender, "You have to own something to get it's value");
             Position memory liquidateMe = viewPosition(_tokenID);
             //swap(address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to)
             // DAI to repay
@@ -243,8 +242,8 @@ contract PhantasmManager is ERC721 {
     }
 
     function closeInsulatedLongPosition(uint256 _tokenID, uint8 _swapImplementation, uint64 _bondImplementation, uint256 _tipFee) public {
-            require(ownerOf(_tokenID) == msg.sender, "You have to own something to get it's value");
-            // _tipFee is just incase bond doesn't accure exactly the same and you need to give it a lil boost
+        require(ownership[_tokenID] == msg.sender, "You have to own something to get it's value");
+        // _tipFee is just incase bond doesn't accure exactly the same and you need to give it a lil boost
             Position memory liquidateMe = viewPosition(_tokenID);
             require(liquidateMe.isInsulated);
             IERC20(DAI).transferFrom(msg.sender, address(this), liquidateMe.debtOwed + _tipFee);
