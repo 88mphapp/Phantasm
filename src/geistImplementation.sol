@@ -86,29 +86,29 @@ contract GeistImplementation {
     function deposit(
         address _asset, 
         uint256 _amount
-    ) public {
+    ) public {   
         IERC20(_asset).approve(address(geistLender), _amount);
         //geistLender.setUserUseReserveAsCollateral(_asset, true);
 
-        geistLender.deposit(_asset, _amount, 0x6Ab30d124cf23aEaEd9Aff8887b2E73f034796ca, 0);
+        geistLender.deposit(_asset, _amount, msg.sender, 0);
 
     }
 
 
 
-    function depositMoney(uint256 _amount, uint256 _borrowME) public {
+    function depositMoney(uint256 _amount, uint256 _borrowME) public { //deposit and Borrow
+        console.log("dai balance ", IERC20(DAI).balanceOf(address(this)));  
 
         IERC20(DAI).transferFrom(msg.sender, address(this), _amount);
 
         IERC20(DAI).approve(address(geistLender), _amount);
-        IERC20(DAI).approve(address(this), _amount);
 
-
-        deposit(DAI, _amount);
+        geistLender.deposit(DAI, _amount, address(this), 0);
 
         geistLender.setUserUseReserveAsCollateral(DAI, true);
 
-        borrow(DAI,_borrowME);
+        geistLender.borrow(DAI, _borrowME, 2, 0, address(this));
+
     }
 
     function withdraw(
