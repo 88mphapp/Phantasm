@@ -105,7 +105,6 @@ contract SpookySwapperTest is DSTest {
 
         test.deposit(address(dai), 1000);
 
-        console.log("we in bois");
 
         vm.stopPrank();
 
@@ -140,36 +139,7 @@ contract SpookySwapperTest is DSTest {
 
         assertTrue(b > 30000000158240500);
     }
-    function testMakeDepositRepay() public {
-        vm.startPrank(0x6Ab30d124cf23aEaEd9Aff8887b2E73f034796ca); //dai and ftm whale
 
-        //IERC20(address(DAI)).approve(address(tester), 10000);
-
-        console.log(
-            "dai balance b efore makedeposit  ",
-            IERC20(DAI).balanceOf(
-                address(0x6Ab30d124cf23aEaEd9Aff8887b2E73f034796ca)
-            )
-        );
-
-        uint256 _amount = 100000 * 1e18;
-        uint256 _amount2 = 100 * 1e18;
-
-        DAI.approve(address(test), _amount);
-
-        IERC20(address(DAI)).approve(address(test), _amount);
-
-        test.depositMoney(_amount, _amount2);
-
-        ILendingPool geistLender = ILendingPool(0x9FAD24f572045c7869117160A571B2e50b10d068);
-
-
-        (uint256 a, uint256 b, uint256 c, uint256 d, uint256 e , uint256 f) = geistLender.getUserAccountData(address(test));
-
-        vm.stopPrank();
-
-        assertTrue(b > 30000000158240500);
-    }
 }
 // forge test --fork-url https://rpc.ftm.tools/ -vvv
 // forge test --fork-url https://mainnet.infura.io/v3/c978b74938064a98b67a150e4ade294d -vvv
