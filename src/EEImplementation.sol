@@ -7,11 +7,24 @@ import './interfaces/IDinterest.sol';
 import "../lib/openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 
+interface bondImplementation {
+    // Primary Functions
+    function findAndBuyYieldTokens(address _token, uint256 _amount) external returns (uint256 _amountSpent);
+    function collectAllInterest(address _token) external returns (uint256 _amountCollected);
+    function buyYieldTokens (address _assetPool, uint64 _depositId, uint256 _stableInAmount) external returns (uint64 _fundingID, uint256 fundingMultitokensMinted, uint256 actualFundAmount, uint256 principalFunded);
+
+    // View Functions
+    function getUserInsuredAmount (address _token) external view returns (uint256 _totalAmountInsured);
+    function getTotalYTInBudget (address _token, uint256 _amountIn) external view returns (uint256 _insuranceAvailable);
+
+}
+
 contract EEIntegration is ERC1155Holder,IERC721Receiver {
 
-    IERC20 public WETH = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
-    IERC20 public dai = IERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
-    DInterest public daiViaAavePool = DInterest(0x6D97eA6e14D35e10b50df9475e9EFaAd1982065E);
+    IERC20 public WETH = IERC20(0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83); // Wrapped Fantom Address
+    IERC20 public dai = IERC20(0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E); // Dai on Fantom
+    DInterest public daiViaAavePool = DInterest(0x89242F3205a21444aF589aF94a3216b13768630E); // DAI via Scream => Implementation 0x89242F3205a21444aF589aF94a3216b13768630E
+    // DInterest public ftmViaAavePool = DInterest(); // Find the other pool for SHORTING
     //DInterest public daiViaCompoundPool = DInterest(0x11B1c87983F881B3686F8b1171628357FAA30038);
     address PhantasmManager;
 
@@ -20,7 +33,6 @@ contract EEIntegration is ERC1155Holder,IERC721Receiver {
     constructor(address _phantasmManager) {
         PhantasmManager = _phantasmManager; 
     }
-
 
     function findAndBuyYieldTokens(address _token, uint256 _amount) public returns (uint256 _amountSpent) {
         uint256 amountLeft = _amount;
