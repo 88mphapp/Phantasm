@@ -153,4 +153,3 @@ contract EEIntegrationTest is DSTest{
 }
 
 
-// forge test --fork-url https://speedy-nodes-nyc.moralis.io/f76db4ae1847b067740cf10b/fantom/mainnet -vvv
