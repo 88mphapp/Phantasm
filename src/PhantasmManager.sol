@@ -245,7 +245,7 @@ contract PhantasmManager {
         require(ownership[_tokenID] == msg.sender, "You have to own something to get it's value");
         // _tipFee is just incase bond doesn't accure exactly the same and you need to give it a lil boost
             Position memory liquidateMe = viewPosition(_tokenID);
-            require(liquidateMe.isInsulated);
+            require(liquidateMe.isInsulated, "Position is not Insulated");
             IERC20(DAI).transferFrom(msg.sender, address(this), liquidateMe.debtOwed + _tipFee);
             uint256 amountCollected = bondImplementation(bondImplementations[_bondImplementation]).collectAllInterest(liquidateMe.stablecoin);
             //swap(address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to)
