@@ -83,7 +83,7 @@ contract EEIntegrationTest is DSTest{
         daiWhaleFunder.call{value: 5 ether}("");
 
         uint256 daiAmountIn = 1000 * 10**daiDecimals;
-        uint64 maturationTimestamp = uint64(block.timestamp + 10000 seconds);
+        uint64 maturationTimestamp = uint64(block.timestamp + 2592000);
 
 
         // Test Making Deposit
