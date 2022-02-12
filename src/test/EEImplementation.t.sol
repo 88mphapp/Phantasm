@@ -26,10 +26,8 @@ contract EEIntegrationTest is DSTest{
     IERC20 WFTM;
     uint daiDecimals;
     uint wftmDecimals;
-    address daiWhaleDepositor;
-    address wftmWhaleDepositor;
-    address daiWhaleFunder;
-    address wftmWhaleFunder;
+    address daiWhale;
+    address wftmWhale;
     PhantasmManager testManager;
     EEIntegration testEEIntegration;
     DInterest daiDInterestPool;
@@ -66,11 +64,8 @@ contract EEIntegrationTest is DSTest{
         wftmDecimals = 18;
 
         // Whale Addresses
-        daiWhaleDepositor = 0xA9497FD9D1dD0d00DE1Bf988E0e36794848900F9;
-        wftmWhaleDepositor = 0x93C08a3168fC469F3fC165cd3A471D19a37ca19e;
-
-        daiWhaleFunder = 0x1a8A0255e8B0ED7C596D236bf28D57Ff3978899b;
-        wftmWhaleFunder = 0xAcEDaB2752882455982E33CF26094284ceE8B6ea;
+        daiWhale = 0xA9497FD9D1dD0d00DE1Bf988E0e36794848900F9;
+        wftmWhale = 0x93C08a3168fC469F3fC165cd3A471D19a37ca19e;
 
         // DInterst Pool 0x89242F3205a21444aF589aF94a3216b13768630E
         daiDInterestPool = DInterest(0xa78276C04D8d807FeB8271fE123C1f94c08A414d); // This Should Be DAI Via Scream Pool: Default - 0xa78276C04D8d807FeB8271fE123C1f94c08A414d
@@ -85,7 +80,7 @@ contract EEIntegrationTest is DSTest{
         emit log("Starting Process of Making Deposit");
 
         // Fund The EEImplementation Contract
-        cheats.startPrank(0xA9497FD9D1dD0d00DE1Bf988E0e36794848900F9);
+        cheats.startPrank(daiWhale);
         DAI.transfer(address(testEEIntegration), 100000 * (10**18));
         cheats.stopPrank();
 
@@ -104,7 +99,6 @@ contract EEIntegrationTest is DSTest{
                 
         assertEq(depositMaturationTimestamp, maturationTimestamp);
         assertEq(depositInitialFundingId, 0);
-
 
 
         // Test Funding Deposit (Buying Yield Tokens)
@@ -130,9 +124,6 @@ contract EEIntegrationTest is DSTest{
 
         assertEq(fundedDepositId, depositId);
         assertTrue(dInterestLens.fundingIsActive(daiDInterestPool, fundingId));
-
-
-
 
 
         // Test Collecting Interest on  YT
