@@ -11,11 +11,13 @@ import {IERC20} from "../interfaces/IERC20.sol";
 import {GeistImplementation} from "../geistImplementation.sol";
 import {AaveImplementation} from "../AaveLenderImplementation.sol";
 import "../interfaces/IAave.sol";
+import {DInterestLens} from "../interfaces/IDInterestLens.sol";
 
 interface CheatCodes {
     function prank(address) external;
     function startPrank(address) external;
     function stopPrank() external;
+    function warp(uint256) external;
 }
 
 contract EEIntegrationTest is DSTest{
@@ -31,6 +33,7 @@ contract EEIntegrationTest is DSTest{
     PhantasmManager testManager;
     EEIntegration testEEIntegration;
     DInterest daiDInterestPool;
+    DInterestLens dInterestLens;
     CheatCodes cheats;
 
     struct Deposit {
@@ -69,34 +72,30 @@ contract EEIntegrationTest is DSTest{
         daiWhaleFunder = 0x1a8A0255e8B0ED7C596D236bf28D57Ff3978899b;
         wftmWhaleFunder = 0xAcEDaB2752882455982E33CF26094284ceE8B6ea;
 
-        // DInterst Pool
-        daiDInterestPool = DInterest(0x89242F3205a21444aF589aF94a3216b13768630E); // This Should Be DAI Via Scream Pool: Default - 0xa78276C04D8d807FeB8271fE123C1f94c08A414d
+        // DInterst Pool 0x89242F3205a21444aF589aF94a3216b13768630E
+        daiDInterestPool = DInterest(0xa78276C04D8d807FeB8271fE123C1f94c08A414d); // This Should Be DAI Via Scream Pool: Default - 0xa78276C04D8d807FeB8271fE123C1f94c08A414d
+        dInterestLens = DInterestLens(0x162083f8096f54d68c6a5f8E86adB400FfC4b201);
 
         // Instantiate Contracts
         testManager = new PhantasmManager();
         testEEIntegration = new EEIntegration(address(testManager));
-
     }
 
     function testEEImplementation() public {
-        daiWhaleDepositor.call{value: 5 ether}("");
-        daiWhaleFunder.call{value: 5 ether}("");
+        emit log("Starting Process of Making Deposit");
 
-        uint256 daiAmountIn = 1000 * 10**daiDecimals;
-        uint64 maturationTimestamp = uint64(block.timestamp + 10000 seconds);
-
+        // Fund The EEImplementation Contract
+        cheats.startPrank(0xA9497FD9D1dD0d00DE1Bf988E0e36794848900F9);
+        DAI.transfer(address(testEEIntegration), 100000 * (10**18));
+        cheats.stopPrank();
 
         // Test Making Deposit
-        emit log("Starting Process of Making Deposit");
-        cheats.startPrank(0xA9497FD9D1dD0d00DE1Bf988E0e36794848900F9);
+        uint256 daiAmountIn = 1000 * 10**daiDecimals;
+        uint64 maturationTimestamp = 1647804453;
 
-        uint depositorOpeningBalanceDai = DAI.balanceOf(daiWhaleDepositor);
-        emit log_named_uint("DAI Balance Before Deposit", depositorOpeningBalanceDai);
-
-        (uint64 depositId, uint256 depositInterestAmount) = testEEIntegration.makeDeposit(address(daiDInterestPool), daiAmountIn, maturationTimestamp);
-
-        uint depositorBalanceAfterDepositDai = DAI.balanceOf(daiWhaleDepositor);
-        emit log_named_uint("DAI Balance After Deposit", depositorBalanceAfterDepositDai);
+        uint256 depositorOpeningBalanceDai = DAI.balanceOf(address(testEEIntegration));
+        (uint64 depositId,) = testEEIntegration.makeDeposit(address(daiDInterestPool), daiAmountIn, maturationTimestamp);
+        uint depositorBalanceAfterDepositDai = DAI.balanceOf(address(testEEIntegration));
 
         assertEq(depositorOpeningBalanceDai, depositorBalanceAfterDepositDai + daiAmountIn);
 
@@ -104,52 +103,46 @@ contract EEIntegrationTest is DSTest{
         uint64 depositInitialFundingId = daiDInterestPool.getDeposit(depositId).fundingID;
                 
         assertEq(depositMaturationTimestamp, maturationTimestamp);
-        assertEq(depositInitialFundingId, 0); // Returns as uint64 => Might Need to Be uint64(0)
-
-        cheats.stopPrank();
-
+        assertEq(depositInitialFundingId, 0);
 
 
 
         // Test Funding Deposit (Buying Yield Tokens)
         emit log("Starting Process of Buying Available Yield Tokens");
-        cheats.startPrank(daiWhaleFunder);
 
-        uint256 funderOpeningBalanceDai = DAI.balanceOf(msg.sender);
-        emit log_named_uint("DAI Balance Before Funding: ", funderOpeningBalanceDai);
+        uint256 funderOpeningBalanceDai = DAI.balanceOf(address(testEEIntegration));
 
-        // fundingMultiTokens might be a uint64 (problem with the EEImplementation)
-        (uint64 fundingId, uint256 fundingMultitokensMinted, uint256 actualFundAmount, uint256 principalFunded) = testEEIntegration.buyYieldTokens(address(daiDInterestPool), depositId, depositInterestAmount);
+        (,uint256 surplus) = dInterestLens.surplusOfDeposit(daiDInterestPool, depositId);
 
-        uint funderBalanceAfterFundingDai = DAI.balanceOf(msg.sender);
-        emit log_named_uint("DAI Balance After Funding: ", funderBalanceAfterFundingDai);
+        uint256 fundAmountIn = surplus * 100;
 
-        assertEq(funderOpeningBalanceDai, funderBalanceAfterFundingDai + depositInterestAmount);
+        // Amount In is Capped to Equal actualFundAmount
+        (uint64 fundingId,, uint256 actualFundAmount,) = testEEIntegration.buyYieldTokens(address(daiDInterestPool), depositId, fundAmountIn);
+        
+        // Assert A > B
+        assertGt(fundAmountIn, actualFundAmount);
+
+        uint funderBalanceAfterFundingDai = DAI.balanceOf(address(testEEIntegration));
+
+        assertEq(funderOpeningBalanceDai, funderBalanceAfterFundingDai + actualFundAmount);
 
         uint64 fundedDepositId = daiDInterestPool.getFunding(fundingId).depositID;
 
         assertEq(fundedDepositId, depositId);
-        assertEq(principalFunded, 1000 * (10**daiDecimals) /*+ depositInterestAmount*/);
+        assertTrue(dInterestLens.fundingIsActive(daiDInterestPool, fundingId));
+
 
 
 
 
         // Test Collecting Interest on  YT
-        uint funderBalanceBeforeCollectionDai = DAI.balanceOf(msg.sender);
-        emit log_named_uint("DAI Balance Before Collection", funderBalanceBeforeCollectionDai);
+        emit log("Starting Process of Collecting Interest On Yield Tokens");
+        cheats.warp(block.timestamp + 2419200);
 
+        uint funderBalanceBeforeCollectionDai = DAI.balanceOf(address(testEEIntegration));
         uint interestCollected = testEEIntegration.collectInterest(address(daiDInterestPool), fundingId);
-        emit log_named_uint("DAI Collected In Interest", interestCollected);
-
-        uint funderBalanceAfterCollectionDai = DAI.balanceOf(msg.sender);
-        emit log_named_uint("DAI Balance After Collection", funderBalanceAfterCollectionDai);
+        uint funderBalanceAfterCollectionDai = DAI.balanceOf(address(testEEIntegration));
 
         assertEq(funderBalanceBeforeCollectionDai, funderBalanceAfterCollectionDai - interestCollected);
-        emit log("User's Balance After Interest Collection is The Before Balance + Interest Amount.");
-        // assertEq(interestCollected, expectedInterest)
-
-        cheats.stopPrank();
     }
 }
-
-

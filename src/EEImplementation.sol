@@ -19,7 +19,7 @@ interface bondImplementation {
 
 }
 
-contract EEIntegration is ERC1155Holder,IERC721Receiver {
+contract EEIntegration is ERC1155Holder, IERC721Receiver {
 
     IERC20 public WETH = IERC20(0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83); // Wrapped Fantom Address
     IERC20 public dai = IERC20(0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E); // Dai on Fantom

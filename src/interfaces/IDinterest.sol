@@ -46,5 +46,4 @@ interface DInterest {
     function surplus() external returns (bool isNegative, uint256 surplusAmount);
     function fundingListLength() external view returns (uint256);
 
-
 }
