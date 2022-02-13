@@ -6,13 +6,13 @@ import "./interfaces/IERC20.sol";
 import './interfaces/ISwapImplementation.sol';
 
 
-interface lenderImplementation {
+interface ILender {
     function leverageLong(address _asset, address _swapper, uint256 _initialCollateralAmount, uint256 _initialBorrowAmount, uint256 _borrowFactor) external returns (uint256, uint256);
     function leverageShort(address _asset, address _swapper, uint256 _initialCollateralAmount, uint256 _initialBorrowAmount, uint256 _borrowFactor) external returns (uint256, uint256);
     function closePosition(address _debtAsset, address _asset, address _swapper, uint256 _debtOwed, uint256 _totalCollateral) external;
 }
 
-interface bondImplementation {
+interface IBond {
     function collectAllInterest(address _token) external returns (uint256 _amountCollected);
     function findAndBuyYieldTokens(address _token, uint256 _amount) external returns (uint256 _amountSpent);
     function buyYieldTokens (address _assetPool, uint64 _depositId, uint256 _stableInAmount) external returns (uint64 _fundingID, uint256 fundingMultitokensMinted, uint256 actualFundAmount, uint256 principalFunded);
@@ -36,8 +36,15 @@ contract PhantasmManager {
     // Ledger holds all token ids to tokens
     mapping(uint256 => Position) private positionLedger;
     uint256 counter = 0;
-    constructor() {
-        owner = msg.sender;
+
+    address lenderImplementation;
+    address bondImplementation;
+    address swapImplementation;
+
+    constructor(address _lenderImplementation, address _bondImplementation, address _swapImplementation ) {
+        lenderImplementation = _lenderImplementation;
+        bondImplementation = _bondImplementation;
+        swapImplementation = _swapImplementation;
     }
 
     /*
@@ -71,39 +78,6 @@ contract PhantasmManager {
 
 
     /*
-      _____                 _                           _        _   _                 
-    |_   _|               | |                         | |      | | (_)                
-    | |  _ __ ___  _ __ | | ___ _ __ ___   ___ _ __ | |_ __ _| |_ _  ___  _ __  ___ 
-    | | | '_ ` _ \| '_ \| |/ _ \ '_ ` _ \ / _ \ '_ \| __/ _` | __| |/ _ \| '_ \/ __|
-    _| |_| | | | | | |_) | |  __/ | | | | |  __/ | | | || (_| | |_| | (_) | | | \__ \
-    |_____|_| |_| |_| .__/|_|\___|_| |_| |_|\___|_| |_|\__\__,_|\__|_|\___/|_| |_|___/
-                    | |                                                               
-                    |_|                                                               
-    */
-
-
-    address[] public swapImplementations;
-    address[] public lenderImplementations;
-    address[] public bondImplementations;
-
-    modifier onlyOwner {
-        require(msg.sender == owner);
-        _;
-    }
-
-    function addSwapImplementation(address _implementation) onlyOwner public {
-        swapImplementations.push(_implementation);
-    }
-
-    function addLenderImplementation(address _implementation) onlyOwner public {
-        lenderImplementations.push(_implementation);
-    }
-
-    function addBondImplementation(address _implementation) onlyOwner public {
-        bondImplementations.push(_implementation);
-    }
-
-    /*
          _                                    _             
         | |                                  (_)            
         | |     _____   _____ _ __ __ _  __ _ _ _ __   __ _ 
@@ -115,8 +89,6 @@ contract PhantasmManager {
     */
 
     function openLongPositionNFT(
-        uint64 _lenderImplementation, 
-        uint64 _swapImplementation,
         address _longToken,
         uint256 _borrowFactor,
         uint256 _assetAmount,
@@ -125,8 +97,8 @@ contract PhantasmManager {
         //function leverageLong(address _longToken, uint256 _borrowAmount, uint256 _borrowFactor, address _swapImplementation) external;
         // Just to see the functions its actually calling because this part is a bit of a mess
         IERC20(_longToken).transferFrom(msg.sender, address(this), _assetAmount);
-        IERC20(_longToken).approve(lenderImplementations[_lenderImplementation], _assetAmount);
-        (uint256 totalBorrow, uint256 totalCollateral) = lenderImplementation(lenderImplementations[_lenderImplementation]).leverageLong(_longToken, swapImplementations[_swapImplementation], _assetAmount, _initialBorrow, _borrowFactor);
+        IERC20(_longToken).approve(lenderImplementation, _assetAmount);
+        (uint256 totalBorrow, uint256 totalCollateral) = ILender(lenderImplementation).leverageLong(_longToken, swapImplementation, _assetAmount, _initialBorrow, _borrowFactor);
         
 
         Position memory createdPosition;
@@ -137,7 +109,6 @@ contract PhantasmManager {
         createdPosition.debtOwed = totalBorrow;
         createdPosition.stablecoin = DAI; // DAI for now
         createdPosition.totalCollateral = totalCollateral;
-        createdPosition.lender = _lenderImplementation;
 
 
         uint256 PositionID = addPosition(createdPosition);
@@ -151,22 +122,20 @@ contract PhantasmManager {
             // DAI to repay
             uint256 amountToRepay = _interestAccured + liquidateMe.debtOwed;
             IERC20(DAI).transferFrom(msg.sender, address(this), amountToRepay);
-            IERC20(DAI).approve(lenderImplementations[liquidateMe.lender], amountToRepay);
-            lenderImplementation(lenderImplementations[liquidateMe.lender]).closePosition(DAI, liquidateMe.asset, swapImplementations[_swapImplementation], amountToRepay, liquidateMe.totalCollateral);
+            IERC20(DAI).approve(lenderImplementation, amountToRepay);
+            ILender(lenderImplementation).closePosition(DAI, liquidateMe.asset, swapImplementation, amountToRepay, liquidateMe.totalCollateral);
 
     }
 
     function openShortPositionNFT(
-        uint64 _lenderImplementation, 
-        uint64 _swapImplementation,
         address _shortToken,
         uint256 _borrowFactor,
         uint256 _assetAmount,
         uint256 _initialBorrow
         ) public returns (uint256) {
             IERC20(DAI).transferFrom(msg.sender, address(this), _assetAmount);
-            IERC20(DAI).approve(lenderImplementations[_lenderImplementation], _assetAmount);
-            (uint256 totalBorrow, uint256 totalCollateral) = lenderImplementation(lenderImplementations[_lenderImplementation]).leverageShort(_shortToken, swapImplementations[_swapImplementation], _assetAmount, _initialBorrow, _borrowFactor);
+            IERC20(DAI).approve(lenderImplementation, _assetAmount);
+            (uint256 totalBorrow, uint256 totalCollateral) = ILender(lenderImplementation).leverageShort(_shortToken, swapImplementation, _assetAmount, _initialBorrow, _borrowFactor);
 
             Position memory createdPosition;
 
@@ -176,7 +145,6 @@ contract PhantasmManager {
             createdPosition.debtOwed = totalBorrow;
             createdPosition.stablecoin = DAI; // DAI for now
             createdPosition.totalCollateral = totalCollateral;
-            createdPosition.lender = _lenderImplementation;
 
 
             uint256 PositionID = addPosition(createdPosition);
@@ -189,8 +157,8 @@ contract PhantasmManager {
             // DAI to repay
             uint256 amountToRepay = _interestAccured + liquidateMe.debtOwed;
             IERC20(liquidateMe.asset).transferFrom(msg.sender, address(this), amountToRepay);
-            IERC20(liquidateMe.asset).approve(lenderImplementations[liquidateMe.lender], amountToRepay);
-            lenderImplementation(lenderImplementations[liquidateMe.lender]).closePosition(liquidateMe.asset, DAI, swapImplementations[_swapImplementation], amountToRepay, liquidateMe.totalCollateral);
+            IERC20(liquidateMe.asset).approve(lenderImplementation, amountToRepay);
+            ILender(lenderImplementation).closePosition(liquidateMe.asset, DAI, swapImplementation, amountToRepay, liquidateMe.totalCollateral);
 
     }
 
@@ -216,13 +184,13 @@ contract PhantasmManager {
         IERC20(_longToken).transferFrom(msg.sender, address(this), _assetAmount);
 
                 // Insure against DAI you will be borrowing
-        IERC20(DAI).transferFrom(msg.sender,bondImplementations[0], stableFundAmount);      
+        IERC20(DAI).transferFrom(msg.sender, bondImplementation, stableFundAmount);      
 
-        bondImplementation(bondImplementations[0]).buyYieldTokens(DAIDinterest, _depositId, stableFundAmount);
+        IBond(bondImplementation).buyYieldTokens(DAIDinterest, _depositId, stableFundAmount);
         
-        IERC20(_longToken).approve(lenderImplementations[0], _assetAmount);
+        IERC20(_longToken).approve(lenderImplementation, _assetAmount);
 
-        (uint256 totalBorrow, uint256 totalCollateral) = lenderImplementation(lenderImplementations[0]).leverageLong(_longToken, swapImplementations[0], _assetAmount, _initialBorrow, _borrowFactor);
+        (uint256 totalBorrow, uint256 totalCollateral) = ILender(lenderImplementation).leverageLong(_longToken, swapImplementation, _assetAmount, _initialBorrow, _borrowFactor);
         
 
 
@@ -241,18 +209,18 @@ contract PhantasmManager {
         return PositionID;
     }
 
-    function closeInsulatedLongPosition(uint256 _tokenID, uint8 _swapImplementation, uint64 _bondImplementation, uint256 _tipFee) public {
+    function closeInsulatedLongPosition(uint256 _tokenID, uint256 _tipFee) public {
         require(ownership[_tokenID] == msg.sender, "You have to own something to get it's value");
         // _tipFee is just incase bond doesn't accure exactly the same and you need to give it a lil boost
             Position memory liquidateMe = viewPosition(_tokenID);
             require(liquidateMe.isInsulated, "Position is not Insulated");
             IERC20(DAI).transferFrom(msg.sender, address(this), liquidateMe.debtOwed + _tipFee);
-            uint256 amountCollected = bondImplementation(bondImplementations[_bondImplementation]).collectAllInterest(liquidateMe.stablecoin);
+            uint256 amountCollected = IBond(bondImplementation).collectAllInterest(liquidateMe.stablecoin);
             //swap(address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to)
             // DAI to repay
             uint256 amountToRepay = amountCollected + liquidateMe.debtOwed + _tipFee;
-            IERC20(DAI).approve(lenderImplementations[liquidateMe.lender], amountToRepay);
-            lenderImplementation(lenderImplementations[liquidateMe.lender]).closePosition(DAI, liquidateMe.asset, swapImplementations[_swapImplementation], amountToRepay, liquidateMe.totalCollateral);
+            IERC20(DAI).approve(lenderImplementation, amountToRepay);
+            ILender(lenderImplementation).closePosition(DAI, liquidateMe.asset, swapImplementation, amountToRepay, liquidateMe.totalCollateral);
     }
 
 }
