@@ -7,7 +7,7 @@ import './interfaces/ISwapImplementation.sol';
 
 
 interface ILender {
-    function leverageLong(address _asset, address _swapper, uint256 _initialCollateralAmount, uint256 _initialBorrowAmount, uint256 _borrowFactor) external returns (uint256, uint256);
+    function leverageLong(address _asset, address _swapper, uint256 _initialCollateralAmount, uint256 _borrowFactor) external returns (uint256, uint256);
     function leverageShort(address _asset, address _swapper, uint256 _initialCollateralAmount, uint256 _initialBorrowAmount, uint256 _borrowFactor) external returns (uint256, uint256);
     function closePosition(address _debtAsset, address _asset, address _swapper, uint256 _debtOwed, uint256 _totalCollateral) external;
 }
@@ -98,7 +98,7 @@ contract PhantasmManager {
         // Just to see the functions its actually calling because this part is a bit of a mess
         IERC20(_longToken).transferFrom(msg.sender, address(this), _assetAmount);
         IERC20(_longToken).approve(lenderImplementation, _assetAmount);
-        (uint256 totalBorrow, uint256 totalCollateral) = ILender(lenderImplementation).leverageLong(_longToken, swapImplementation, _assetAmount, _initialBorrow, _borrowFactor);
+        (uint256 totalBorrow, uint256 totalCollateral) = ILender(lenderImplementation).leverageLong(_longToken, swapImplementation, _assetAmount, _borrowFactor);
         
 
         Position memory createdPosition;
@@ -175,22 +175,21 @@ contract PhantasmManager {
         address _longToken,
         uint256 _borrowFactor,
         uint256 _assetAmount,
-        uint256 _initialBorrow,
         uint64 _depositId,
-        uint256 stableFundAmount
+        uint256 stableInAmount
 ) public returns (uint256) {
         //function leverageLong(address _longToken, uint256 _borrowAmount, uint256 _borrowFactor, address _swapImplementation) external;
         // Just to see the functions its actually calling because this part is a bit of a mess
         IERC20(_longToken).transferFrom(msg.sender, address(this), _assetAmount);
 
-                // Insure against DAI you will be borrowing
-        IERC20(DAI).transferFrom(msg.sender, bondImplementation, stableFundAmount);      
+        // Insure against DAI you will be borrowing
+        IERC20(DAI).transferFrom(msg.sender, bondImplementation, stableInAmount);      
 
-        IBond(bondImplementation).buyYieldTokens(DAIDinterest, _depositId, stableFundAmount);
+        IBond(bondImplementation).buyYieldTokens(DAIDinterest, _depositId, stableInAmount);
         
         IERC20(_longToken).approve(lenderImplementation, _assetAmount);
 
-        (uint256 totalBorrow, uint256 totalCollateral) = ILender(lenderImplementation).leverageLong(_longToken, swapImplementation, _assetAmount, _initialBorrow, _borrowFactor);
+        (uint256 totalBorrow, uint256 totalCollateral) = ILender(lenderImplementation).leverageLong(_longToken, swapImplementation, _assetAmount, _borrowFactor);
         
 
 
@@ -224,3 +223,4 @@ contract PhantasmManager {
     }
 
 }
+
