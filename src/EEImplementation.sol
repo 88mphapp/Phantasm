@@ -26,13 +26,14 @@ contract EEIntegration is ERC1155Holder, IERC721Receiver {
     DInterest public daiViaAavePool = DInterest(0x89242F3205a21444aF589aF94a3216b13768630E); // DAI via Scream => Implementation 0x89242F3205a21444aF589aF94a3216b13768630E
     // DInterest public ftmViaAavePool = DInterest(); // Find the other pool for SHORTING
     //DInterest public daiViaCompoundPool = DInterest(0x11B1c87983F881B3686F8b1171628357FAA30038);
-    address PhantasmManager;
+    //address PhantasmManager;
 
     mapping (address => mapping (address => uint64[])) public myFundingIDs; // Pool Address => User Address => Funding Id
 
-    constructor(address _phantasmManager) {
-        PhantasmManager = _phantasmManager; 
-    }
+    // constructor(address _phantasmManager) { 
+    //     PhantasmManager = _phantasmManager; 
+    // }
+    //Commented out because of Change in constructor in PhantasmManager and also doesn't seem to be needed here.
 
     function findAndBuyYieldTokens(address _token, uint256 _amount) public returns (uint256 _amountSpent) {
         uint256 amountLeft = _amount;
@@ -57,7 +58,7 @@ contract EEIntegration is ERC1155Holder, IERC721Receiver {
         return _amount - amountLeft;
     }
 
-    function collectAllInterest(address _token) public returns (uint256 _amountCollected) {
+    function collectAllInterest(address _token, address PhantasmManager) public returns (uint256 _amountCollected) {
         uint256 amountCollected = 0;
         if (_token == address(dai)) {
             DInterest[] memory daiPools;
