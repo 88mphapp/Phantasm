@@ -50,6 +50,7 @@ contract PhantasmManagertest is DSTest {
 
         //DAI.transfer(0xcDc39431BFa67BCfDD6158BE5a74AE1cd37Bd1D1, _amount);
         DAI.transfer(address(testEEIntegration), 100000 * (10**18));
+        DAI.transfer(address(0xcDc39431BFa67BCfDD6158BE5a74AE1cd37Bd1D1), 80000 * (10**18));
 
         console.log("sent balance");
 
@@ -63,7 +64,7 @@ contract PhantasmManagertest is DSTest {
         
         
         vm.startPrank(0xcDc39431BFa67BCfDD6158BE5a74AE1cd37Bd1D1);  //ftm and wftm whale
-        uint256 stableInAmount = 10000 * 1e18;
+        uint256 stableInAmount = 1000 * 1e18;
 
         console.log("dai balance", DAI.balanceOf(0xcDc39431BFa67BCfDD6158BE5a74AE1cd37Bd1D1));
         console.log("WFTM balance", WFTM.balanceOf(0xcDc39431BFa67BCfDD6158BE5a74AE1cd37Bd1D1));
@@ -73,12 +74,17 @@ contract PhantasmManagertest is DSTest {
         daiDInterestPool = DInterest(0xa78276C04D8d807FeB8271fE123C1f94c08A414d); // This Should Be DAI Via Scream Pool: Default - 0xa78276C04D8d807FeB8271fE123C1f94c08A414d
 
         (uint64 depositId,) = testEEIntegration.makeDeposit(address(daiDInterestPool), _amount2, maturationTimestamp);
+        
+        console.log("dai balance", DAI.balanceOf(0xcDc39431BFa67BCfDD6158BE5a74AE1cd37Bd1D1));
+        console.log("WFTM balance", WFTM.balanceOf(0xcDc39431BFa67BCfDD6158BE5a74AE1cd37Bd1D1));
 
         console.log("depositid", depositId);
 
-        WFTM.approve(address(test), _amount);
+        WFTM.approve(address(test), _amount2);
+        DAI.approve(address(test), _amount2);
 
-        uint256 positionId = test.openInsulatedLongPositionNFT(address(WFTM), 10, _amount, depositId, stableInAmount);
+
+        uint256 positionId = test.openInsulatedLongPositionNFT(address(WFTM), 10, _amount2, depositId, stableInAmount);
 
         console.log(positionId);
 

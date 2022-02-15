@@ -4,7 +4,7 @@ pragma solidity ^0.8;
 // Some interfaces are needed here
 import "./interfaces/IERC20.sol";
 import './interfaces/ISwapImplementation.sol';
-
+import "./test/utils/console.sol";
 
 interface ILender {
     function leverageLong(address _asset, address _swapper, uint256 _initialCollateralAmount, uint256 _borrowFactor) external returns (uint256, uint256);
@@ -21,7 +21,7 @@ contract PhantasmManager {
 
     address private owner;
     address private immutable DAI = 0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E;
-    address private immutable DAIDinterest = 0x6D97eA6e14D35e10b50df9475e9EFaAd1982065E;
+    address private immutable DAIDinterest = 0xa78276C04D8d807FeB8271fE123C1f94c08A414d;
 
     struct Position {
         bool    isLong;
@@ -91,8 +91,7 @@ contract PhantasmManager {
     function openLongPositionNFT(
         address _longToken,
         uint256 _borrowFactor,
-        uint256 _assetAmount,
-        uint256 _initialBorrow
+        uint256 _assetAmount
 ) public returns (uint256) {
         //function leverageLong(address _longToken, uint256 _borrowAmount, uint256 _borrowFactor, address _swapImplementation) external;
         // Just to see the functions its actually calling because this part is a bit of a mess
@@ -181,9 +180,16 @@ contract PhantasmManager {
         //function leverageLong(address _longToken, uint256 _borrowAmount, uint256 _borrowFactor, address _swapImplementation) external;
         // Just to see the functions its actually calling because this part is a bit of a mess
         IERC20(_longToken).transferFrom(msg.sender, address(this), _assetAmount);
+        console.log("after tranfer 1");
 
         // Insure against DAI you will be borrowing
-        IERC20(DAI).transferFrom(msg.sender, bondImplementation, stableInAmount);      
+        IERC20(DAI).transferFrom(msg.sender, address(this), stableInAmount);      
+        console.log("after tranfer 1");
+
+        IERC20(DAI).approve(bondImplementation, stableInAmount);
+        IERC20(DAI).transfer(bondImplementation, stableInAmount);      
+        
+        console.log("after tranfer 1");
 
         IBond(bondImplementation).buyYieldTokens(DAIDinterest, _depositId, stableInAmount);
         
