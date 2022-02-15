@@ -22,6 +22,8 @@ interface CheatCodes {
 
 contract EEIntegrationTest is DSTest{
     // Initialize Variables
+    SpookySwapper testSwapper = new SpookySwapper();
+
     IERC20 DAI;
     IERC20 WFTM;
     uint daiDecimals;
@@ -72,8 +74,9 @@ contract EEIntegrationTest is DSTest{
         dInterestLens = DInterestLens(0x162083f8096f54d68c6a5f8E86adB400FfC4b201);
 
         // Instantiate Contracts
-        testManager = new PhantasmManager();
-        testEEIntegration = new EEIntegration(address(testManager));
+        testManager = new PhantasmManager(0x9FAD24f572045c7869117160A571B2e50b10d068, address(testEEIntegration), address(testSwapper));        
+
+        testEEIntegration = new EEIntegration();
     }
 
     function testEEImplementation() public {
