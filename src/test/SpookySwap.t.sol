@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Unlicense
+//SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.11;
 
 import "./utils/console.sol";
@@ -87,10 +87,10 @@ contract SpookySwapperTest is DSTest {
         assertTrue(dai.balanceOf(address(this)) >= 10000);
     }
 
-    function testGesitdeposit() public {
+    function testGesitdepositFTM() public {
         //ftm
 
-        vm.startPrank(0x36cb763573813990DFaE2069c4dF4eefba3aec7F);
+        vm.startPrank(0x36cb763573813990DFaE2069c4dF4eefba3aec7F);  //test dai
 
         console.log(
             "dai balance ",
@@ -99,11 +99,44 @@ contract SpookySwapperTest is DSTest {
 
         IERC20(address(dai)).approve(address(test), 1000);
         IERC20(address(dai)).transfer(address(test), 1000);
-        IERC20(address(dai)).approve(address(test), 1000);
+        console.log(
+            "dai balance of geist before transfer",
+            dai.balanceOf(address(address(test)))
+        );        
+        test.deposit(address(dai), 1000);
 
+        console.log(
+            "dai balance of geist after transfer",
+            dai.balanceOf(address(test))
+        );
+        vm.stopPrank();
+    }
+
+
+    function testGesitdepositDAI() public {
+
+        vm.startPrank(0xcDc39431BFa67BCfDD6158BE5a74AE1cd37Bd1D1);  //test wftm
+        IERC20(address(WFTM)).approve(address(test), 1000);
+        IERC20(address(WFTM)).transfer(address(test), 1000);
+        
+        console.log(
+            "wftm balance of prank caller ",
+            WFTM.balanceOf(0xcDc39431BFa67BCfDD6158BE5a74AE1cd37Bd1D1)
+        );
+        console.log(
+            "wftm balance of geist before transfer",
+            WFTM.balanceOf(address(test))
+        );
+
+        test.deposit(address(WFTM), 1000);
+        
+        console.log(
+            "wftm balance of geist after transfer",
+            WFTM.balanceOf(address(test))
+        );
         vm.stopPrank();
 
-        test.deposit(address(dai), 1000);
+
     }
 
     function testMakeDeposit() public {

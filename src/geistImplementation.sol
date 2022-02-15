@@ -19,31 +19,42 @@ contract GeistImplementation {
     ILendingPool geistLender = ILendingPool(0x9FAD24f572045c7869117160A571B2e50b10d068);
 
     address public constant DAI = 0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E;
+    address public constant WFTM = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83;
 
-    function leverageLong(address _asset, address _swapper, uint256 _initialCollateralAmount, uint256 _initialBorrowAmount, uint256 _borrowFactor) external returns (uint256, uint256) {
+    function leverageLong(address _asset, address _swapper, uint256 _initialCollateralAmount, uint256 _borrowFactor) external returns (uint256, uint256) {
         
+        console.log("after tranfer geist", msg.sender);
         IERC20(_asset).transferFrom(msg.sender, address(this), _initialCollateralAmount);
         IERC20(_asset).approve(address(geistLender), _initialCollateralAmount);
+        console.log("WFTM balance", IERC20(WFTM).balanceOf(address(this)));
 
-        deposit(_asset, _initialCollateralAmount);
+        geistLender.deposit(_asset, _initialCollateralAmount, address(this), 0);
+
         geistLender.setUserUseReserveAsCollateral(_asset, true);
+
         uint256 nextBorrow = _initialCollateralAmount;
         uint256 totalBorrow;
         uint256 totalCollateral = _initialCollateralAmount;
         // After 3 loops law of diminishing returns really kills you
         for(uint i = 0; i < 3; i++){
-            uint borrowAmount = (nextBorrow * _borrowFactor) / 100;
+            uint borrowAmount = (nextBorrow / _borrowFactor) ;
+            console.log("loan amount");
+
             borrow(DAI, borrowAmount);
             totalBorrow += borrowAmount;
             // (address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to
             IERC20(DAI).approve(_swapper, borrowAmount);
+
             uint256 tokensBought = swapImplementation(_swapper).swap(DAI, _asset,borrowAmount, 1, address(this));
+            console.log("after tranfer geist");
+
             uint256 nextBorrow = tokensBought;
             // Re-approving each deposit sucks, but is signficiantly safer
             IERC20(_asset).approve(address(geistLender), tokensBought);
             deposit(_asset, tokensBought);
             totalCollateral += tokensBought;
         }
+        
         return (totalBorrow, totalCollateral);
         
     }
@@ -90,7 +101,7 @@ contract GeistImplementation {
         IERC20(_asset).approve(address(geistLender), _amount);
         //geistLender.setUserUseReserveAsCollateral(_asset, true);
 
-        geistLender.deposit(_asset, _amount, msg.sender, 0);
+        geistLender.deposit(_asset, _amount, address(this), 0);
 
     }
 

@@ -180,19 +180,16 @@ contract PhantasmManager {
         //function leverageLong(address _longToken, uint256 _borrowAmount, uint256 _borrowFactor, address _swapImplementation) external;
         // Just to see the functions its actually calling because this part is a bit of a mess
         IERC20(_longToken).transferFrom(msg.sender, address(this), _assetAmount);
-        console.log("after tranfer 1");
 
         // Insure against DAI you will be borrowing
         IERC20(DAI).transferFrom(msg.sender, address(this), stableInAmount);      
-        console.log("after tranfer 1");
 
         IERC20(DAI).approve(bondImplementation, stableInAmount);
         IERC20(DAI).transfer(bondImplementation, stableInAmount);      
         
-        console.log("after tranfer 1");
 
         IBond(bondImplementation).buyYieldTokens(DAIDinterest, _depositId, stableInAmount);
-        
+
         IERC20(_longToken).approve(lenderImplementation, _assetAmount);
 
         (uint256 totalBorrow, uint256 totalCollateral) = ILender(lenderImplementation).leverageLong(_longToken, swapImplementation, _assetAmount, _borrowFactor);
@@ -209,8 +206,11 @@ contract PhantasmManager {
         createdPosition.totalCollateral = totalCollateral;
         createdPosition.lender = 0;
 
+                console.log("after tranfer 1");
 
         uint256 PositionID = addPosition(createdPosition);
+                        console.log("after tranfer 1");
+
         return PositionID;
     }
 
