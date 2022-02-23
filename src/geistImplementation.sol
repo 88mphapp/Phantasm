@@ -8,13 +8,7 @@ import "./interfaces/ISwapImplementation.sol";
 import "./test/utils/console.sol";
 
 contract GeistImplementation {
-    /*
-         .-.
-        (o o) boo!
-        | O \
-        \   \
-        `~~~'
-    */
+
     ILendingPool geistLender = ILendingPool(0x9FAD24f572045c7869117160A571B2e50b10d068);
 
     address DAI = 0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E;
@@ -73,28 +67,38 @@ contract GeistImplementation {
         
     }
 
-    // function leverageShort(address _asset, address _swapper, uint256 _initialCollateralAmount, uint256 _initialBorrowAmount, uint256 _borrowFactor) external returns (uint256, uint256) {
-    //     IERC20(DAI).transferFrom(msg.sender, address(this), _initialCollateralAmount);
-    //     IERC20(DAI).approve(address(geistLender), _initialCollateralAmount);
-    //     deposit(DAI, _initialCollateralAmount);
-    //     geistLender.setUserUseReserveAsCollateral(DAI, true);
-    //     uint256 nextBorrow = _initialBorrowAmount;
-    //     uint256 totalBorrow;
-    //     uint256 totalCollateral = _initialCollateralAmount;
-    //     // Highly leveraged shorts breaks a lot of things, so I've limited it for now
-    //     uint borrowAmount = (nextBorrow * _borrowFactor) / 100;
-    //     borrow(_asset, borrowAmount);
-    //     totalBorrow += borrowAmount;
-    //     // (address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to
-    //     IERC20(_asset).approve(_swapper, borrowAmount);
-    //     uint256 tokensBoughtswapImplementation(_swapper).Swap(_asset,DAI,borrowAmount, 1, address(this));
-    //     IERC20(DAI).approve(address(geistLender), tokensBought);
-    //     deposit(DAI, tokensBought);
-    //     totalCollateral += tokensBought;
-    
-    //     return (totalBorrow, totalCollateral);
+    function leverageShort(address _asset, address _swapper, uint256 _initialCollateralAmount, uint256 _initialBorrowAmount) external returns (uint256, uint256) {
+        IERC20(DAI).transferFrom(msg.sender, address(this), _initialCollateralAmount);
+        IERC20(DAI).approve(address(geistLender), _initialCollateralAmount);
         
-    // }
+        
+
+        deposit(DAI, _initialCollateralAmount);
+        geistLender.setUserUseReserveAsCollateral(DAI, true);
+        uint256 nextBorrow = _initialBorrowAmount;
+        uint256 totalBorrow;
+        uint256 totalCollateral = _initialCollateralAmount;
+        // Highly leveraged shorts breaks a lot of things, so I've limited it for now
+
+
+        uint borrowAmount = (nextBorrow /2) ;
+        borrow(_asset, borrowAmount);
+        totalBorrow += borrowAmount;
+
+        uint256 amtBeforeSwap = IERC20(DAI).balanceOf(address(this));
+
+        IERC20(_asset).approve(_swapper, borrowAmount);
+        swapImplementation(_swapper).Swap(_asset,DAI,borrowAmount, 1, address(this));
+
+        uint256 tokensBought = IERC20(_asset).balanceOf(address(this)) - amtBeforeSwap;
+
+        IERC20(DAI).approve(address(geistLender), tokensBought);
+        deposit(DAI, tokensBought);
+        totalCollateral += tokensBought;
+    
+        return (totalBorrow, totalCollateral);
+        
+    }
     
     function closePosition(address _debtAsset, address _asset, address _swapper, uint256 _debtOwed, uint256 _totalCollateral) public {
         IERC20(_debtAsset).transferFrom(msg.sender, address(this), _debtOwed);
@@ -113,8 +117,6 @@ contract GeistImplementation {
         uint256 _amount
     ) public {   
         IERC20(_asset).approve(address(geistLender), _amount);
-        //geistLender.setUserUseReserveAsCollateral(_asset, true);
-
         geistLender.deposit(_asset, _amount, address(this), 0);
 
     }
