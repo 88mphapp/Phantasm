@@ -15,8 +15,10 @@ contract SpookySwapper {
     IERC20 public WFTM = IERC20(0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83);
 
     function Swap(address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to) public {
+        console.log("we in swap");
 
         IERC20(_tokenIn).transferFrom(msg.sender, address(this), _amountIn);
+        console.log("we in swap2");
 
 
 
@@ -38,6 +40,7 @@ contract SpookySwapper {
         }
 
         SpookyRouter.swapExactTokensForTokens(_amountIn, _amountOutMin, path, _to, block.timestamp);
+        console.log("we in swap");
 
         IERC20(_tokenOut).transfer(msg.sender, IERC20(_tokenOut).balanceOf(address(this)));
     }

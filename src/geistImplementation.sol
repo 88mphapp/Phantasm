@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8;
+pragma solidity 0.8.12;
 
 
 import "./interfaces/IERC20.sol";
 import "./interfaces/ILendingPool.sol";
 import "./interfaces/ISwapImplementation.sol";
 import "./test/utils/console.sol";
-
 
 contract GeistImplementation {
     /*
@@ -18,15 +17,14 @@ contract GeistImplementation {
     */
     ILendingPool geistLender = ILendingPool(0x9FAD24f572045c7869117160A571B2e50b10d068);
 
-    address public constant DAI = 0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E;
-    address public constant WFTM = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83;
+    address DAI = 0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E;
 
-    function leverageLong(address _asset, address _swapper, uint256 _initialCollateralAmount, uint256 _borrowFactor) external returns (uint256, uint256) {
-        
-        console.log("after tranfer geist", msg.sender);
+
+    function leverageLong(address _asset, address _swapper, uint256 _initialCollateralAmount) external returns (uint256, uint256) {
+           uint256 a;uint256 c;
+
         IERC20(_asset).transferFrom(msg.sender, address(this), _initialCollateralAmount);
         IERC20(_asset).approve(address(geistLender), _initialCollateralAmount);
-        console.log("WFTM balance", IERC20(WFTM).balanceOf(address(this)));
 
         geistLender.deposit(_asset, _initialCollateralAmount, address(this), 0);
 
@@ -36,17 +34,33 @@ contract GeistImplementation {
         uint256 totalBorrow;
         uint256 totalCollateral = _initialCollateralAmount;
         // After 3 loops law of diminishing returns really kills you
-        for(uint i = 0; i < 3; i++){
-            uint borrowAmount = (nextBorrow / _borrowFactor) ;
-            console.log("loan amount");
+        for(uint i = 0; i < 2; i++){
+            uint borrowAmount = (nextBorrow / 2) ;
+            console.log("Dai balance contract", IERC20(0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E).balanceOf(address(this)));
+            (a,,c,,,) = geistLender.getUserAccountData(address(this));
 
-            borrow(DAI, borrowAmount);
+            console.log("total collateral", a/(10**18));
+            console.log("available borrow", c/(10**18));
+
+            console.log("next borrow amount", borrowAmount/(10**18));
+
+            borrow(0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E, borrowAmount);
             totalBorrow += borrowAmount;
-            // (address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to
-            IERC20(DAI).approve(_swapper, borrowAmount);
 
-            uint256 tokensBought = swapImplementation(_swapper).swap(DAI, _asset,borrowAmount, 1, address(this));
-            console.log("after tranfer geist");
+            // (address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to
+            IERC20(0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E).approve(address(_swapper), borrowAmount);
+            IERC20(_asset).approve(address(_swapper), borrowAmount);
+
+            console.log(_swapper);
+
+            uint256 amtBeforeSwap = IERC20(_asset).balanceOf(address(this));
+
+            swapImplementation(_swapper).Swap(0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E, _asset, borrowAmount, 0, address(this));
+
+            uint256 tokensBought = IERC20(_asset).balanceOf(address(this)) - amtBeforeSwap;
+
+
+            console.log("swap amount that is going to be deposited", tokensBought/(10**18));
 
             uint256 nextBorrow = tokensBought;
             // Re-approving each deposit sucks, but is signficiantly safer
@@ -59,28 +73,28 @@ contract GeistImplementation {
         
     }
 
-    function leverageShort(address _asset, address _swapper, uint256 _initialCollateralAmount, uint256 _initialBorrowAmount, uint256 _borrowFactor) external returns (uint256, uint256) {
-        IERC20(DAI).transferFrom(msg.sender, address(this), _initialCollateralAmount);
-        IERC20(DAI).approve(address(geistLender), _initialCollateralAmount);
-        deposit(DAI, _initialCollateralAmount);
-        geistLender.setUserUseReserveAsCollateral(DAI, true);
-        uint256 nextBorrow = _initialBorrowAmount;
-        uint256 totalBorrow;
-        uint256 totalCollateral = _initialCollateralAmount;
-        // Highly leveraged shorts breaks a lot of things, so I've limited it for now
-        uint borrowAmount = (nextBorrow * _borrowFactor) / 100;
-        borrow(_asset, borrowAmount);
-        totalBorrow += borrowAmount;
-        // (address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to
-        IERC20(_asset).approve(_swapper, borrowAmount);
-        uint256 tokensBought = swapImplementation(_swapper).swap(_asset,DAI,borrowAmount, 1, address(this));
-        IERC20(DAI).approve(address(geistLender), tokensBought);
-        deposit(DAI, tokensBought);
-        totalCollateral += tokensBought;
+    // function leverageShort(address _asset, address _swapper, uint256 _initialCollateralAmount, uint256 _initialBorrowAmount, uint256 _borrowFactor) external returns (uint256, uint256) {
+    //     IERC20(DAI).transferFrom(msg.sender, address(this), _initialCollateralAmount);
+    //     IERC20(DAI).approve(address(geistLender), _initialCollateralAmount);
+    //     deposit(DAI, _initialCollateralAmount);
+    //     geistLender.setUserUseReserveAsCollateral(DAI, true);
+    //     uint256 nextBorrow = _initialBorrowAmount;
+    //     uint256 totalBorrow;
+    //     uint256 totalCollateral = _initialCollateralAmount;
+    //     // Highly leveraged shorts breaks a lot of things, so I've limited it for now
+    //     uint borrowAmount = (nextBorrow * _borrowFactor) / 100;
+    //     borrow(_asset, borrowAmount);
+    //     totalBorrow += borrowAmount;
+    //     // (address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to
+    //     IERC20(_asset).approve(_swapper, borrowAmount);
+    //     uint256 tokensBoughtswapImplementation(_swapper).Swap(_asset,DAI,borrowAmount, 1, address(this));
+    //     IERC20(DAI).approve(address(geistLender), tokensBought);
+    //     deposit(DAI, tokensBought);
+    //     totalCollateral += tokensBought;
     
-        return (totalBorrow, totalCollateral);
+    //     return (totalBorrow, totalCollateral);
         
-    }
+    // }
     
     function closePosition(address _debtAsset, address _asset, address _swapper, uint256 _debtOwed, uint256 _totalCollateral) public {
         IERC20(_debtAsset).transferFrom(msg.sender, address(this), _debtOwed);

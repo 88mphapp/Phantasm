@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity 0.8.11;
+pragma solidity 0.8.12;
 
 import "./utils/console.sol";
 import "../../lib/ds-test/src/test.sol";
@@ -46,12 +46,9 @@ contract PhantasmManagertest is DSTest {
 
     function testManager() public {
         vm.startPrank(0x6Ab30d124cf23aEaEd9Aff8887b2E73f034796ca);  //ftm and wftm whale
-        uint256 _amount = 100000 * 1e18;
+        uint256 _amount = 10000 * 1e18;
         uint256 _amount2 = 1000 * 1e18;
 
-        //DAI.approve(address(test), _amount);
-
-        //DAI.transfer(0xcDc39431BFa67BCfDD6158BE5a74AE1cd37Bd1D1, _amount);
         DAI.transfer(address(testEEIntegration), 100000 * (10**18));
         DAI.transfer(address(0xcDc39431BFa67BCfDD6158BE5a74AE1cd37Bd1D1), 80000 * (10**18));
 
@@ -59,18 +56,11 @@ contract PhantasmManagertest is DSTest {
 
         uint64 maturationTimestamp = 1647804453;
 
-
         vm.stopPrank();
 
-        assertTrue(0<1);        
-        
         
         
         vm.startPrank(0xcDc39431BFa67BCfDD6158BE5a74AE1cd37Bd1D1);  //ftm and wftm whale
-        uint256 stableInAmount = 1000 * 1e18;
-
-        console.log("dai balance", DAI.balanceOf(0xcDc39431BFa67BCfDD6158BE5a74AE1cd37Bd1D1));
-        console.log("WFTM balance", WFTM.balanceOf(0xcDc39431BFa67BCfDD6158BE5a74AE1cd37Bd1D1));
 
         DAI.approve(address(testEEIntegration), _amount2);
         
@@ -83,12 +73,12 @@ contract PhantasmManagertest is DSTest {
 
         console.log("depositid", depositId);
 
-        WFTM.approve(address(test), _amount2);
+        WFTM.approve(address(test), _amount);
         DAI.approve(address(test), _amount2);
 
         uint256 factor = 2;
 
-        uint256 positionId = test.openInsulatedLongPositionNFT(address(WFTM), factor , _amount2, depositId, stableInAmount);
+        uint256 positionId = test.openInsulatedLongPositionNFT(address(WFTM), factor , _amount, depositId, _amount2);
 
         console.log(positionId);
 
