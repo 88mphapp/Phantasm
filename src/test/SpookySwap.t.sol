@@ -14,6 +14,8 @@ interface Vm {
 
     function startPrank(address) external;
 
+    function warp(uint256) external;
+
     function stopPrank() external;
 }
 
@@ -47,57 +49,138 @@ contract SpookySwapperTest is DSTest {
 
     }
 
-    function testSwap() public {
-        vm.startPrank(0x02517411F32ac2481753aD3045cA19D58e448A01);
-        uint256 _amount = 10000 * (10**18);
+    // function testSwap() public {
+    //     vm.startPrank(0x02517411F32ac2481753aD3045cA19D58e448A01);
+    //     uint256 _amount = 10000 * (10**18);
 
-        IERC20(TOMB).transfer(
-            0xdDf169Bf228e6D6e701180E2e6f290739663a784,
-            _amount
-        );
+    //     IERC20(TOMB).transfer(
+    //         0xdDf169Bf228e6D6e701180E2e6f290739663a784,
+    //         _amount
+    //     );
 
-        vm.stopPrank();
+    //     vm.stopPrank();
 
-        vm.startPrank(0xdDf169Bf228e6D6e701180E2e6f290739663a784);
-        uint256 _amount2 = 1000 * (10**18);
+    //     vm.startPrank(0xdDf169Bf228e6D6e701180E2e6f290739663a784);
+    //     uint256 _amount2 = 1000 * (10**18);
 
-        console.log(
-            "TOMB balance ",
-            TOMB.balanceOf(0xdDf169Bf228e6D6e701180E2e6f290739663a784)
-        );
+    //     console.log(
+    //         "TOMB balance ",
+    //         TOMB.balanceOf(0xdDf169Bf228e6D6e701180E2e6f290739663a784)
+    //     );
 
-        IERC20(0x6c021Ae822BEa943b2E66552bDe1D2696a53fbB7).approve(
-            address(testSwapper),
-            _amount2
-        );
-        IERC20(0x6c021Ae822BEa943b2E66552bDe1D2696a53fbB7).approve(
-            address(testSwapper),
-            _amount2
-        );
+    //     IERC20(0x6c021Ae822BEa943b2E66552bDe1D2696a53fbB7).approve(
+    //         address(testSwapper),
+    //         _amount2
+    //     );
+    //     IERC20(0x6c021Ae822BEa943b2E66552bDe1D2696a53fbB7).approve(
+    //         address(testSwapper),
+    //         _amount2
+    //     );
 
-        console.log("Before swap dai balance", dai.balanceOf(address(this)));
-        console.log("Before swap TOMB balance", TOMB.balanceOf(address(this)));
+    //     console.log("Before swap dai balance", dai.balanceOf(address(this)));
+    //     console.log("Before swap TOMB balance", TOMB.balanceOf(address(this)));
 
-        testSwapper.Swap(
-            0x6c021Ae822BEa943b2E66552bDe1D2696a53fbB7,
-            0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E,
-            _amount2,
-            0,
-            address(this)
-        );
+    //     testSwapper.Swap(
+    //         0x6c021Ae822BEa943b2E66552bDe1D2696a53fbB7,
+    //         0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E,
+    //         _amount2,
+    //         0,
+    //         address(this)
+    //     );
 
-        console.log("after swap balance");
+    //     console.log("after swap balance");
 
-        console.log(TOMB.balanceOf(address(this)));
-        console.log(dai.balanceOf(address(this)));
+    //     console.log(TOMB.balanceOf(address(this)));
+    //     console.log(dai.balanceOf(address(this)));
 
-        vm.stopPrank();
+    //     vm.stopPrank();
 
-        assertTrue(dai.balanceOf(address(this)) >= _amount2);
-    }
+    //     assertTrue(dai.balanceOf(address(this)) >= _amount2);
+    // }
+
+    // function testSwapWETH() public {
+    //     vm.startPrank(0x93C08a3168fC469F3fC165cd3A471D19a37ca19e);
+    //     uint256 _amount = 10000 * (10**18);
+
+
+    //     uint256 _amount2 = 1000 * (10**18);
+
+    //     console.log(
+    //         "WETH balance ",
+    //         WETH.balanceOf(0xdDf169Bf228e6D6e701180E2e6f290739663a784)
+    //     );
+
+
+    //     WETH.approve(
+    //         address(testSwapper),
+    //         _amount2
+    //     );
+
+    //     console.log("Before swap dai balance", dai.balanceOf(address(this)));
+    //     console.log("Before swap WETH balance", WETH.balanceOf(address(this)));
+
+    //     testSwapper.Swap(
+    //         address(WETH),
+    //         address(DAI),
+    //         _amount2,
+    //         0,
+    //         address(this)
+    //     );
+
+    //     console.log("after swap balance");
+
+    //     console.log(WETH.balanceOf(address(this)));
+    //     console.log(dai.balanceOf(address(this)));
+
+    //     vm.stopPrank();
+
+    //     assertTrue(dai.balanceOf(address(this)) >= _amount2);
+    // }
+
+
+
+    // function testSwapCRV() public {
+    //     vm.startPrank(0xc62A0781934744E05927ceABB94a3043CdCfEA89);
+    //     uint256 _amount = 1000 * (10**18);
+
+
+    //     uint256 _amount2 = 1000 * (10**18);
+
+    //     console.log(
+    //         "CRV balance ",
+    //         CRV.balanceOf(0xc62A0781934744E05927ceABB94a3043CdCfEA89)
+    //     );
+
+    //     CRV.approve(
+    //         address(testSwapper),
+    //         _amount2
+    //     );
+
+    //     console.log("Before swap dai balance", dai.balanceOf(address(this)));
+    //     console.log("Before swap CRV balance", TOMB.balanceOf(address(this)));
+
+    //     testSwapper.Swap(
+    //         address(CRV),
+    //         address(DAI),
+    //         _amount2,
+    //         0,
+    //         address(this)
+    //     );
+
+    //     console.log("after swap balance");
+
+    //     console.log(CRV.balanceOf(address(this)));
+    //     console.log(dai.balanceOf(address(this)));
+
+    //     vm.stopPrank();
+
+    //     assertTrue(dai.balanceOf(address(this)) >= _amount2);
+    // }    
+
 
     function testGesitdepositFTM() public {
         //ftm
+        uint256 _amount = 10000 * (10**18);
 
         vm.startPrank(0x36cb763573813990DFaE2069c4dF4eefba3aec7F);  //test dai
 
@@ -106,8 +189,8 @@ contract SpookySwapperTest is DSTest {
             dai.balanceOf(0x36cb763573813990DFaE2069c4dF4eefba3aec7F)
         );
 
-        IERC20(address(dai)).approve(address(test), 1000);
-        IERC20(address(dai)).transfer(address(test), 1000);
+        IERC20(address(dai)).approve(address(test), _amount);
+        IERC20(address(dai)).transfer(address(test), _amount);
         console.log(
             "dai balance of geist before transfer",
             dai.balanceOf(address(address(test)))
@@ -152,7 +235,7 @@ contract SpookySwapperTest is DSTest {
         //IERC20(address(DAI)).approve(address(tester), 10000);
 
         console.log(
-            "dai balance b efore makedeposit  ",
+            "dai balance before makedeposit  ",
             IERC20(DAI).balanceOf(
                 address(0x6Ab30d124cf23aEaEd9Aff8887b2E73f034796ca)
             )
@@ -174,6 +257,7 @@ contract SpookySwapperTest is DSTest {
 
         assertTrue(b > 30000000158240500);
     }
+
     function testMakeDepositRepay() public {
         vm.startPrank(0x6Ab30d124cf23aEaEd9Aff8887b2E73f034796ca); //dai and ftm whale
 
@@ -351,7 +435,7 @@ contract SpookySwapperTest is DSTest {
     }
 }
 
-// forge test --fork-url https://rpc.ftm.tools/ -vvv
+//                             forge test --fork-url https://rpc.ftm.tools/ -vvv
 //ftm and dai whale 0xb6E825727DaE1e3886639FAa29bAcf623E8Ed91E  0x6Ab30d124cf23aEaEd9Aff8887b2E73f034796ca  0x36cb763573813990DFaE2069c4dF4eefba3aec7F  0x1741403bdDd055D7016dBcD0C3ADCb4BFbFD797c
 //ftm and wftm whale 0xcDc39431BFa67BCfDD6158BE5a74AE1cd37Bd1D1
 //gwbtc and ftm whale 0x4282890fF9661a51EA367AeddF341C6f6395d4E1
@@ -359,5 +443,6 @@ contract SpookySwapperTest is DSTest {
 
 //forge test --fork-url https://speedy-nodes-nyc.moralis.io/0789fa9194b002fb68a53415/fantom/mainnet -vvv
 //forge test --fork-url https://speedy-nodes-nyc.moralis.io/0789fa9194b002fb68a53415/fantom/mainnet -vvv
-// forge test --fork-url https://rpc.neist.io/ -vvv
-//forge test --fork-url https://ftmrpc.ultimatenodes.io/ -vvv
+// forge test --fork-url https://rpc3.fantom.network -vvv
+//  forge test --fork-url https://ftmrpc.ultimatenodes.io/ -vvv
+//  forge test --fork-url https://rpc.ankr.com/fantom -vvv

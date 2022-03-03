@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // t4sk's wonderful Compound interface
-pragma solidity ^0.8;
+pragma solidity 0.8.12;
 
 interface ICErc20 {
   function balanceOf(address) external view returns (uint);

@@ -36,7 +36,7 @@ contract GeistImplementation {
             console.log("total collateral", a/(10**18));
             console.log("available borrow", c/(10**18));
 
-            console.log("next borrow amount", borrowAmount/(10**18));
+            console.log("next bo rrow amount", borrowAmount/(10**18));
 
             borrow(0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E, borrowAmount);
             totalBorrow += borrowAmount;
@@ -81,16 +81,18 @@ contract GeistImplementation {
         // Highly leveraged shorts breaks a lot of things, so I've limited it for now
 
 
-        uint borrowAmount = (nextBorrow /2) ;
+        uint256 borrowAmount = (nextBorrow /2) ;
         borrow(_asset, borrowAmount);
         totalBorrow += borrowAmount;
 
         uint256 amtBeforeSwap = IERC20(DAI).balanceOf(address(this));
 
         IERC20(_asset).approve(_swapper, borrowAmount);
+        console.log("borrowe amount", borrowAmount);
         swapImplementation(_swapper).Swap(_asset,DAI,borrowAmount, 1, address(this));
 
         uint256 tokensBought = IERC20(_asset).balanceOf(address(this)) - amtBeforeSwap;
+        console.log("tokens bought", tokensBought);
 
         IERC20(DAI).approve(address(geistLender), tokensBought);
         deposit(DAI, tokensBought);
@@ -124,13 +126,14 @@ contract GeistImplementation {
 
 
     function depositMoney(uint256 _amount, uint256 _borrowME) public { //deposit and Borrow
-        console.log("dai balance ", IERC20(DAI).balanceOf(address(this)));  
 
         IERC20(DAI).transferFrom(msg.sender, address(this), _amount);
 
+
         IERC20(DAI).approve(address(geistLender), _amount);
 
-        geistLender.deposit(DAI, _amount, address(this), 0);
+        geistLender.deposit(DAI, _amount, msg.sender, 1);
+        console.log("d ai balance ", IERC20(DAI).balanceOf(address(this)));  
 
         geistLender.setUserUseReserveAsCollateral(DAI, true);
 

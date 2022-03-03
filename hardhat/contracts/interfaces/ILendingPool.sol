@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.12;
+pragma solidity 0.7.1;
 pragma experimental ABIEncoderV2;
 
 import {ILendingPoolAddressesProvider} from './IlendingPoolAddressesProvider.sol';
-import {DataTypes} from '../libraries/DataTypes.sol';
+import {DataTypes} from '../../libraries/DataTypes.sol';
 
 interface ILendingPool {
   /**
