@@ -1,6 +1,5 @@
 const { BigNumber } =require("@ethersproject/bignumber");
 const { IERC20 } =require("../artifacts/contracts/interfaces/IERC20.sol/IERC20.json");
-
 const { expect } = require("chai");
 const { ethers, networks, upgrades } = require("hardhat");
 
@@ -401,6 +400,71 @@ describe("openInsulatedLongPositionNFT", function () {
 
       // totalBorrow = await geist.connect(signer).leverageLong("0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83", spooky.address, AssetAmount);
      let positionid=(await phantasm.connect(signer).callStatic.openInsulatedLongPositionNFT("0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83", 2, AssetAmount, 118, AssetAmount2));
+      //console.log(totalBorrow);
+      console.log("open insulated long done!")
+
+      
+      expect(positionid>=1);
+
+
+  
+  
+    });
+  });
+  
+
+describe("openLongPositionNFT", function () {
+    it("openLongPositionNFT with WFTM", async function () {
+  
+  
+      const GeistImplementation = await ethers.getContractFactory("GeistImplementation");
+      const SpookySwap = await ethers.getContractFactory("SpookySwapper");
+      const EEIntegration = await ethers.getContractFactory("EEIntegration");
+      const PhantasmManager = await ethers.getContractFactory("PhantasmManager");
+
+  
+      const geist = await GeistImplementation.deploy();
+      const spooky = await SpookySwap.deploy();
+      const ee = await EEIntegration.deploy();
+      const phantasm = await PhantasmManager.deploy(geist.address, ee.address, spooky.address);
+
+      await spooky.deployed();
+      await geist.deployed();
+      await ee.deployed();
+      await phantasm.deployed();
+
+
+  
+      let AssetAmount = BigNumber.from("4000000000000000000000") //4000
+      let AssetAmount2 = BigNumber.from("500000000000000000000") //500
+
+
+  
+      await ethers.provider.send("hardhat_impersonateAccount", [
+        "0x4dCA1fb2a8B49ccFa7c71aC0050b888874fAbbE9",
+      ]);
+      const impersonatedAccount = await ethers.provider.getSigner(
+        "0x4dCA1fb2a8B49ccFa7c71aC0050b888874fAbbE9"
+      );
+  
+      const provider = ethers.provider;
+  
+      await hre.network.provider.request({
+        method: "hardhat_impersonateAccount",
+        params: ["0x4dCA1fb2a8B49ccFa7c71aC0050b888874fAbbE9"],
+      });
+  
+      const signer = await ethers.getSigner("0x4dCA1fb2a8B49ccFa7c71aC0050b888874fAbbE9")
+      
+      var DAI = new ethers.Contract("0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E", daiAbi , signer);
+      var WFTM = new ethers.Contract("0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83", daiAbi , signer);
+      
+
+
+      let appro2 = await WFTM.approve(phantasm.address, AssetAmount);
+
+      // totalBorrow = await geist.connect(signer).leverageLong("0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83", spooky.address, AssetAmount);
+     let positionid=(await phantasm.connect(signer).callStatic.openLongPositionNFT("0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83", 2,  AssetAmount2));
       //console.log(totalBorrow);
       console.log("open insulated long done!")
 
