@@ -36,6 +36,6 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
     },
   },
   mocha: {
-    timeout: 80000
+    timeout: 200000
   }  
 };

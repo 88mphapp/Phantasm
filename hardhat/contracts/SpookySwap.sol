@@ -16,8 +16,6 @@ contract SpookySwapper {
 
         IERC20(_tokenIn).transferFrom(msg.sender, address(this), _amountIn);
 
-
-
         IERC20(_tokenIn).approve(address(SpookyRouter), _amountIn);
 
         address[] memory path;

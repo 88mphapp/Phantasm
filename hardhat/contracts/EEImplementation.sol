@@ -127,9 +127,12 @@ contract EEIntegration is ERC1155Holder, IERC721Receiver {
 ░█─░█ ▀▀▀ ▀▀▀ █▀▀▀ ▀▀▀ ▀─▀▀ ▀▀▀
     */
     
+    event Deposit(uint64 id);
     function makeDeposit (address _assetPool, uint256 _stableInAmount, uint64 _maturationTimestamp) public returns (uint64 depositID, uint256 interestAmount) {
         dai.approve(_assetPool, _stableInAmount);
-        return DInterest(_assetPool).deposit(_stableInAmount, _maturationTimestamp);
+        (uint64 a, uint256 b)=  DInterest(_assetPool).deposit(_stableInAmount, _maturationTimestamp);
+        emit Deposit(a);
+        return(a, b);
     }
 
     function buyYieldTokens (address _assetPool, uint64 _depositId, uint256 _stableInAmount) public returns (uint64 _fundingID, uint256 fundingMultitokensMinted, uint256 actualFundAmount, uint256 principalFunded) {
