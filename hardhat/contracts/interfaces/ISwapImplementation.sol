@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.12;
+pragma solidity ^0.8.0;
 
 interface swapImplementation {
     function Swap(address _tokenIn, address _tokenOut, uint256 _amountIn, uint _amountOutMin, address _to) external;

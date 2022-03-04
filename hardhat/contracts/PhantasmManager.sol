@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.12;
+pragma solidity ^0.8.0;
 
 // Some interfaces are needed here
 import "./interfaces/IERC20.sol";
 import './interfaces/ISwapImplementation.sol';
-import "./test/utils/console.sol";
 
 interface ILender {
     function leverageLong(address _asset, address _swapper, uint256 _initialCollateralAmount) external returns (uint256, uint256);
@@ -181,24 +180,19 @@ contract PhantasmManager {
         // Just to see the functions its actually calling because this part is a bit of a mess
         IERC20(_longToken).transferFrom(msg.sender, address(this), _assetAmount);
 
-        console.log("we");
 
         // Insure against DAI you will be borrowing
         IERC20(DAI).transferFrom(msg.sender, address(this), stableInAmount);      
-        console.log("we");
 
         IERC20(DAI).approve(bondImplementation, stableInAmount);
         IERC20(DAI).transfer(bondImplementation, stableInAmount);      
-                console.log("we");
 
 
         IBond(bondImplementation).buyYieldTokens(DAIDinterest, _depositId, stableInAmount);
-        console.log("we");
 
         IERC20(_longToken).approve(lenderImplementation, _assetAmount);
 
         (uint256 totalBorrow, uint256 totalCollateral) = ILender(lenderImplementation).leverageLong(_longToken, swapImplementation, _assetAmount);
-                console.log("we");
 
 
 
@@ -212,10 +206,8 @@ contract PhantasmManager {
         createdPosition.totalCollateral = totalCollateral;
         createdPosition.lender = 0;
 
-                console.log("after tranfer 1");
 
         uint256 PositionID = addPosition(createdPosition);
-                        console.log("after tranfer 1");
 
         return PositionID;
     }
