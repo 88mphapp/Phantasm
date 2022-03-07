@@ -166,8 +166,7 @@ contract PhantasmManager {
     | |  _ __  ___ _   _| | __ _| |_ ___  __| |
     | | | '_ \/ __| | | | |/ _` | __/ _ \/ _` |
     _| |_| | | \__ \ |_| | | (_| | ||  __/ (_| |
-    |_____|_| |_|___/\__,_|_|\__,_|\__\___|\__,_|
-                                              
+    |_____|_| |_|___/\__,_|_|\__,_|\__\___|\__,_|                        
 */
     function openInsulatedLongPositionNFT(
         address _longToken,
@@ -213,7 +212,7 @@ contract PhantasmManager {
     }
 
     function closeInsulatedLongPosition(uint256 _tokenID, uint256 _tipFee) public {
-        require(ownership[_tokenID] == msg.sender, "You have to own something to get it's value");
+        require(ownership[_tokenID] == msg.sender || ownership[_tokenID] == address(this), "You have to own something to get it's value");
         // _tipFee is just incase bond doesn't accure exactly the same and you need to give it a lil boost
             Position memory liquidateMe = viewPosition(_tokenID);
             require(liquidateMe.isInsulated, "Position is not Insulated");
@@ -224,6 +223,20 @@ contract PhantasmManager {
             uint256 amountToRepay = amountCollected + liquidateMe.debtOwed + _tipFee;
             IERC20(DAI).approve(lenderImplementation, amountToRepay);
             ILender(lenderImplementation).closePosition(DAI, liquidateMe.asset, swapImplementation, amountToRepay, liquidateMe.totalCollateral);
+    }
+
+    function checkUnhealthyPosition(uint256 _tokenID) public view {
+        Position memory liquidateMe = viewPosition(_tokenID);
+        if (liquidateMe.debtOwed == 0) return uint256(-1);
+
+        return liquidateMe.totalCollateral.mul(liquidationThreshold).div(100);
+    }
+
+    function liquidateUnHealthyPosition(uint256 _tokenID) public {
+        uint256 health = checkUnhealthyPosition(_tokenID);
+        if (health > 50) {
+            closeInsulatedLongPosition.closeInsulatedLongPosition(_token, 0);
+        }
     }
 
 }
