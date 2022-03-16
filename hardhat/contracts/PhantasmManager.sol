@@ -9,6 +9,9 @@ interface ILender {
     function leverageLong(address _asset, address _swapper, uint256 _initialCollateralAmount) external returns (uint256, uint256);
     function leverageShort(address _asset, address _swapper, uint256 _initialCollateralAmount, uint256 _initialBorrowAmount, uint256 _borrowFactor) external returns (uint256, uint256);
     function closePosition(address _debtAsset, address _asset, address _swapper, uint256 _debtOwed, uint256 _totalCollateral) external;
+    function getContractHealth() external view returns(uint256, uint256, uint256);
+    function depositMoney(uint256 _amount) external ;
+
 }
 
 interface IBond {
@@ -21,6 +24,7 @@ contract PhantasmManager {
     address private owner;
     address private immutable DAI = 0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E;
     address private immutable DAIDinterest = 0xa78276C04D8d807FeB8271fE123C1f94c08A414d;
+    address WETH = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83;
 
     struct Position {
         bool    isLong;
@@ -225,18 +229,28 @@ contract PhantasmManager {
             ILender(lenderImplementation).closePosition(DAI, liquidateMe.asset, swapImplementation, amountToRepay, liquidateMe.totalCollateral);
     }
 
-    function checkUnhealthyPosition(uint256 _tokenID) public view {
-        Position memory liquidateMe = viewPosition(_tokenID);
-        if (liquidateMe.debtOwed == 0) return uint256(-1);
+    // function checkUnhealthyPosition(uint256 _tokenID) public view {
+    //     Position memory liquidateMe = viewPosition(_tokenID);
+    //     if (liquidateMe.debtOwed == 0) return uint256(-1);
 
-        return liquidateMe.totalCollateral.mul(liquidationThreshold).div(100);
+    //     return liquidateMe.totalCollateral.mul(liquidationThreshold).div(100);
+    // }
+
+    // function liquidateUnHealthyPosition(uint256 _tokenID) public {
+    //     uint256 health = checkUnhealthyPosition(_tokenID);
+    //     if (health > 50) {
+    //         closeInsulatedLongPosition.closeInsulatedLongPosition(_token, 0);
+    //     }
+    // }
+    function testshit(uint256 a) public {
+        IERC20(WETH).transferFrom(msg.sender, address(this), a);
+        IERC20(WETH).approve(lenderImplementation, a);        
+
+        ILender(lenderImplementation).depositMoney(a);
     }
-
-    function liquidateUnHealthyPosition(uint256 _tokenID) public {
-        uint256 health = checkUnhealthyPosition(_tokenID);
-        if (health > 50) {
-            closeInsulatedLongPosition.closeInsulatedLongPosition(_token, 0);
-        }
+    function getContractHealth() public view returns(uint256, uint256, uint256) {
+        (uint256 a, uint256 b ,uint256 c)= ILender(lenderImplementation).getContractHealth();
+        return(a,b,c);
     }
 
 }

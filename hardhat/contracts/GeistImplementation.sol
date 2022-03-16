@@ -11,6 +11,7 @@ contract GeistImplementation {
     ILendingPool geistLender = ILendingPool(0x9FAD24f572045c7869117160A571B2e50b10d068);
 
     address DAI = 0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E;
+    address WETH = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83;
 
 
     function leverageLong(address _asset, address _swapper, uint256 _initialCollateralAmount) external returns (uint256, uint256) {
@@ -27,11 +28,9 @@ contract GeistImplementation {
         uint256 totalBorrow;
         uint256 totalCollateral = _initialCollateralAmount;
         // After 3 loops law of diminishing returns really kills you
-        for(uint i = 0; i < 2; i++){
-            uint borrowAmount = (nextBorrow / 2) ;
+        for(uint i = 0; i < 1; i++){
+            uint borrowAmount = (nextBorrow * uint256(65)/ 100) ;
             (a,,c,,,) = geistLender.getUserAccountData(address(this));
-
-
 
             borrow(0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E, borrowAmount);
             totalBorrow += borrowAmount;
@@ -116,18 +115,17 @@ contract GeistImplementation {
 
 
 
-    function depositMoney(uint256 _amount, uint256 _borrowME) public { //deposit and Borrow
+    function depositMoney(uint256 _amount) external { //deposit and Borrow
 
-        IERC20(DAI).transferFrom(msg.sender, address(this), _amount);
+        IERC20(WETH).transferFrom(msg.sender, address(this), _amount);
+        IERC20(WETH).approve(address(geistLender), _amount);
+
+        geistLender.deposit(WETH, _amount, address(this), 1);
+        geistLender.setUserUseReserveAsCollateral(WETH, true);
+        // uint256 borrowAmount = (_amount /2) ;
 
 
-        IERC20(DAI).approve(address(geistLender), _amount);
-
-        geistLender.deposit(DAI, _amount, address(this), 1);
-
-        geistLender.setUserUseReserveAsCollateral(DAI, true);
-
-        geistLender.borrow(DAI, _borrowME, 2, 0, address(this));
+        // geistLender.borrow(DAI, borrowAmount, 2, 0, address(this));
 
     }
 
@@ -152,4 +150,9 @@ contract GeistImplementation {
         uint256 amountRepayed = geistLender.repay(_asset, _amount, 2, address(this));
         return amountRepayed;
     }
+
+    function getContractHealth() external view returns(uint256, uint256, uint256) {
+        (uint256 a, uint256 b ,uint256 c, , , )= geistLender.getUserAccountData(address(this));
+        return (a,b,c);
+    }    
 }
