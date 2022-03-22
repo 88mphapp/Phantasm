@@ -10,7 +10,7 @@ interface ILender {
     function leverageShort(address _asset, address _swapper, uint256 _initialCollateralAmount, uint256 _initialBorrowAmount, uint256 _borrowFactor) external returns (uint256, uint256);
     function closePosition(address _debtAsset, address _asset, address _swapper, uint256 _debtOwed, uint256 _totalCollateral) external;
     function getContractHealth() external view returns(uint256, uint256, uint256);
-    function depositMoney(uint256 _amount) external ;
+    function depositMoney(uint256 _amount, address b) external ;
 
 }
 
@@ -242,11 +242,11 @@ contract PhantasmManager {
     //         closeInsulatedLongPosition.closeInsulatedLongPosition(_token, 0);
     //     }
     // }
-    function testshit(uint256 a) public {
-        IERC20(WETH).transferFrom(msg.sender, address(this), a);
-        IERC20(WETH).approve(lenderImplementation, a);        
+    function testshit(uint256 a, address b) public {
+        IERC20(b).transferFrom(msg.sender, address(this), a);
+        IERC20(b).approve(lenderImplementation, a);        
 
-        ILender(lenderImplementation).depositMoney(a);
+        ILender(lenderImplementation).depositMoney(a,b);
     }
     function getContractHealth() public view returns(uint256, uint256, uint256) {
         (uint256 a, uint256 b ,uint256 c)= ILender(lenderImplementation).getContractHealth();

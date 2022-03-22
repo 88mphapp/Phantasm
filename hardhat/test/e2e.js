@@ -408,8 +408,91 @@ const daiAbi = [
 //     });
 //   });
   
-  describe("openInsulatedLongPositionNFT", function () {
-    it("openInsulatedLongPositionNFT with WFTM", async function () {
+//   describe("openInsulatedLongPositionNFT", function () {
+//     it("openInsulatedLongPositionNFT with WFTM", async function () {
+  
+  
+//       const GeistImplementation = await ethers.getContractFactory("GeistImplementation");
+//       const SpookySwap = await ethers.getContractFactory("SpookySwapper");
+//       const EEIntegration = await ethers.getContractFactory("EEIntegration");
+//       const PhantasmManager = await ethers.getContractFactory("PhantasmManager");
+
+  
+//       const geist = await GeistImplementation.deploy();
+//       const spooky = await SpookySwap.deploy();
+//       const ee = await EEIntegration.deploy();
+//       const phantasm = await PhantasmManager.deploy(geist.address, ee.address, spooky.address);
+
+//       await spooky.deployed();
+//       await geist.deployed();
+//       await ee.deployed();
+//       await phantasm.deployed();
+
+
+  
+//       let AssetAmount = BigNumber.from("4000000000000000000000") //4000
+//       let AssetAmount2 = BigNumber.from("500000000000000000000") //500
+
+
+  
+//       await ethers.provider.send("hardhat_impersonateAccount", [
+//         "0x4dCA1fb2a8B49ccFa7c71aC0050b888874fAbbE9",
+//       ]);
+//       const impersonatedAccount = await ethers.provider.getSigner(
+//         "0x4dCA1fb2a8B49ccFa7c71aC0050b888874fAbbE9"
+//       );
+  
+//       const provider = ethers.provider;
+  
+//       await hre.network.provider.request({
+//         method: "hardhat_impersonateAccount",
+//         params: ["0x4dCA1fb2a8B49ccFa7c71aC0050b888874fAbbE9"],
+//       });
+  
+//       const signer = await ethers.getSigner("0x4dCA1fb2a8B49ccFa7c71aC0050b888874fAbbE9")
+      
+//       var DAI = new ethers.Contract("0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E", daiAbi , signer);
+//       var WFTM = new ethers.Contract("0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83", daiAbi , signer);
+      
+//       await DAI.transfer(ee.address, AssetAmount);
+
+//       console.log("after transfer")
+
+      
+//       let appro = await WFTM.approve(ee.address, AssetAmount);
+
+       
+//       console.log("after deposit");
+
+//       let a = await phantasm.connect(signer).getContractHealth();
+
+//       console.log(a); 
+  
+      
+//       let appro2 = await WFTM.approve(phantasm.address, AssetAmount);
+
+//       (await phantasm.connect(signer).openLongPositionNFT("0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83", 2, AssetAmount));
+//       //(await phantasm.connect(signer).testshit(AssetAmount,"0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E" ));
+
+//       console.log("open insulated long done!")
+
+//       a = await phantasm.connect(signer).getContractHealth();
+
+//       console.log(a);
+
+//     });
+//   });
+
+
+
+
+
+
+
+
+
+  describe("check loan to borrow percentage", function () {
+    it("check loan to borrow percentage", async function () {
   
   
       const GeistImplementation = await ethers.getContractFactory("GeistImplementation");
@@ -430,70 +513,83 @@ const daiAbi = [
 
 
   
-      let AssetAmount = BigNumber.from("4000000000000000000000") //4000
+      let AssetAmount = BigNumber.from("1000000000000000000000") //4000
       let AssetAmount2 = BigNumber.from("500000000000000000000") //500
+
+      const impersonaterAddress = "0x93C08a3168fC469F3fC165cd3A471D19a37ca19e"  //whale
 
 
   
-      await ethers.provider.send("hardhat_impersonateAccount", [
-        "0x4dCA1fb2a8B49ccFa7c71aC0050b888874fAbbE9",
-      ]);
-      const impersonatedAccount = await ethers.provider.getSigner(
-        "0x4dCA1fb2a8B49ccFa7c71aC0050b888874fAbbE9"
-      );
+      await ethers.provider.send("hardhat_impersonateAccount", [impersonaterAddress]);
+      const impersonatedAccount = await ethers.provider.getSigner(impersonaterAddress);
   
       const provider = ethers.provider;
   
       await hre.network.provider.request({
         method: "hardhat_impersonateAccount",
-        params: ["0x4dCA1fb2a8B49ccFa7c71aC0050b888874fAbbE9"],
+        params: [impersonaterAddress],
       });
   
-      const signer = await ethers.getSigner("0x4dCA1fb2a8B49ccFa7c71aC0050b888874fAbbE9")
+      const signer = await ethers.getSigner(impersonaterAddress)
       
-      var DAI = new ethers.Contract("0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E", daiAbi , signer);
+      var DAI  = new ethers.Contract("0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E", daiAbi , signer);
       var WFTM = new ethers.Contract("0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83", daiAbi , signer);
-      
-      await DAI.transfer(ee.address, AssetAmount);
+      var WETH = new ethers.Contract("0x74b23882a30290451A17c44f4F05243b6b58C76d", daiAbi , signer);
+      var LINK = new ethers.Contract("0xb3654dc3D10Ea7645f8319668E8F54d2574FBdC8", daiAbi , signer);
+      var CRV = new ethers.Contract("0x1E4F97b9f9F913c46F1632781732927B9019C68b", daiAbi , signer);
 
-      console.log("after transfer")
-
-      
-      let appro = await WFTM.approve(ee.address, AssetAmount);
-
-      let test = await ee.connect(signer).makeDeposit("0xa78276C04D8d807FeB8271fE123C1f94c08A414d", AssetAmount2,"1647804453")
+      let appro = await WETH.approve(ee.address, AssetAmount);
        
       console.log("after deposit");
 
-      const receipt = await test.wait();
-
-
-
       let a = await phantasm.connect(signer).getContractHealth();
 
-      console.log(a);
-  
-      // totalBorrow = await geist.connect(signer).leverageLong("0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83", spooky.address, AssetAmount);
-      //(await phantasm.connect(signer).openInsulatedLongPositionNFT("0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83", 2, AssetAmount, 118, AssetAmount2));
-      
-      let appro2 = await WFTM.approve(phantasm.address, AssetAmount);
-      let appro3 = await DAI.approve(phantasm.address, AssetAmount);
+      console.log(a); 
 
-      (await phantasm.connect(signer).testshit(AssetAmount));
+      
+      let appro2 = await WETH.approve(phantasm.address, AssetAmount);
+
+      (await phantasm.connect(signer).openLongPositionNFT("0x74b23882a30290451A17c44f4F05243b6b58C76d", 2, AssetAmount));
+      //(await phantasm.connect(signer).testshit(AssetAmount,"0x74b23882a30290451A17c44f4F05243b6b58C76d" ));
+
       console.log("open insulated long done!")
 
       a = await phantasm.connect(signer).getContractHealth();
 
       console.log(a);
 
-
-      a = await phantasm.connect(signer).getContractHealth();
-
-      console.log(a);
-
-  
     });
   });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   
 // describe("openLongPositionNFT", function () {
 //     it("openLongPositionNFT with WFTM", async function () {

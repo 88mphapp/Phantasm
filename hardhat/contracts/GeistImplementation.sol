@@ -28,8 +28,13 @@ contract GeistImplementation {
         uint256 totalBorrow;
         uint256 totalCollateral = _initialCollateralAmount;
         // After 3 loops law of diminishing returns really kills you
-        for(uint i = 0; i < 1; i++){
-            uint borrowAmount = (nextBorrow * uint256(65)/ 100) ;
+        for(uint i = 0; i < 2; i++){
+            uint borrowAmount;
+            if( i!=0 ){
+                borrowAmount = (nextBorrow * uint256(75)/ 100) ;
+            }else{
+                borrowAmount = (nextBorrow * uint256(80)/ 100) ;
+            }
             (a,,c,,,) = geistLender.getUserAccountData(address(this));
 
             borrow(0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E, borrowAmount);
@@ -113,22 +118,18 @@ contract GeistImplementation {
 
     }
 
+    function depositMoney(uint256 _amount, address a) external { //deposit and Borrow
 
+        IERC20(a).transferFrom(msg.sender, address(this), _amount);
+        IERC20(a).approve(address(geistLender), _amount);
 
-    function depositMoney(uint256 _amount) external { //deposit and Borrow
-
-        IERC20(WETH).transferFrom(msg.sender, address(this), _amount);
-        IERC20(WETH).approve(address(geistLender), _amount);
-
-        geistLender.deposit(WETH, _amount, address(this), 1);
-        geistLender.setUserUseReserveAsCollateral(WETH, true);
+        geistLender.deposit(a, _amount, address(this), 1);
+        geistLender.setUserUseReserveAsCollateral(a, true);
         // uint256 borrowAmount = (_amount /2) ;
-
-
         // geistLender.borrow(DAI, borrowAmount, 2, 0, address(this));
 
     }
-
+ 
     function withdraw(
         address _asset,
         uint256 _amount

@@ -22,7 +22,7 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
   networks: {
     hardhat: {
       forking: {
-        url: "https://rpc.ankr.com/fantom",
+        url: "https://rpc.ftm.tools/",
       }
     }
   },
@@ -36,6 +36,6 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
     },
   },
   mocha: {
-    timeout: 200000
+    timeout: 300000
   }  
 };
