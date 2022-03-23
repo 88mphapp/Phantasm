@@ -12,7 +12,7 @@ contract SpookySwapper {
     IUniswapV2Router public SpookyRouter = IUniswapV2Router(0xF491e7B69E4244ad4002BC14e878a34207E38c29);
     IERC20 public WFTM = IERC20(0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83);
 
-    function Swap(address _tokenIn, address _tokenOut, uint256 _amountIn, uint _amountOutMin, address _to) public {
+    function Swap(address _tokenIn, address _tokenOut, uint256 _amountIn, uint _amountOutMin, address _to) public returns(uint) {
 
         IERC20(_tokenIn).transferFrom(msg.sender, address(this), _amountIn);
 
@@ -33,9 +33,12 @@ contract SpookySwapper {
             path[2] = _tokenOut;
         }
 
-        SpookyRouter.swapExactTokensForTokens(_amountIn, _amountOutMin, path, _to, block.timestamp);
+        uint [] memory test= SpookyRouter.swapExactTokensForTokens(_amountIn, _amountOutMin, path, _to, block.timestamp);
+
+
 
         IERC20(_tokenOut).transfer(msg.sender, IERC20(_tokenOut).balanceOf(address(this)));
+        return test[2];
 
     }
 

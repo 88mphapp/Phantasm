@@ -117,7 +117,7 @@ contract PhantasmManager {
         return PositionID;
     }
 
-    function closeLongPosition(uint256 _tokenID, uint8 _swapImplementation, uint256 _interestAccured) public {
+    function closeLongPosition(uint256 _tokenID,  uint256 _interestAccured) public {
             require(ownership[_tokenID] == msg.sender, "You have to own something to get it's value");
             Position memory liquidateMe = viewPosition(_tokenID);
             //swap(address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to)

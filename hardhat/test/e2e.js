@@ -491,8 +491,12 @@ const daiAbi = [
 
 
 
-  describe("check loan to borrow percentage", function () {
-    it("check loan to borrow percentage", async function () {
+
+
+
+
+  describe("Long position NFT ", function () {
+    it("Test long and close", async function () {
   
   
       const GeistImplementation = await ethers.getContractFactory("GeistImplementation");
@@ -516,7 +520,7 @@ const daiAbi = [
       let AssetAmount = BigNumber.from("1000000000000000000000") //4000
       let AssetAmount2 = BigNumber.from("500000000000000000000") //500
 
-      const impersonaterAddress = "0x93C08a3168fC469F3fC165cd3A471D19a37ca19e"  //whale
+      const impersonaterAddress = "0xc62A0781934744E05927ceABB94a3043CdCfEA89"  //whale
 
 
   
@@ -537,8 +541,10 @@ const daiAbi = [
       var WETH = new ethers.Contract("0x74b23882a30290451A17c44f4F05243b6b58C76d", daiAbi , signer);
       var LINK = new ethers.Contract("0xb3654dc3D10Ea7645f8319668E8F54d2574FBdC8", daiAbi , signer);
       var CRV = new ethers.Contract("0x1E4F97b9f9F913c46F1632781732927B9019C68b", daiAbi , signer);
+      var MIM = new ethers.Contract("0x82f0B8B456c1A451378467398982d4834b6829c1", daiAbi , signer);
 
-      let appro = await WETH.approve(ee.address, AssetAmount);
+
+      let appro = await MIM.approve(ee.address, AssetAmount);
        
       console.log("after deposit");
 
@@ -547,10 +553,14 @@ const daiAbi = [
       console.log(a); 
 
       
-      let appro2 = await WETH.approve(phantasm.address, AssetAmount);
+      let appro2 = await CRV.approve(phantasm.address, AssetAmount);
 
-      (await phantasm.connect(signer).openLongPositionNFT("0x74b23882a30290451A17c44f4F05243b6b58C76d", 2, AssetAmount));
-      //(await phantasm.connect(signer).testshit(AssetAmount,"0x74b23882a30290451A17c44f4F05243b6b58C76d" ));
+      (await phantasm.connect(signer).openLongPositionNFT("0x1E4F97b9f9F913c46F1632781732927B9019C68b", 2, AssetAmount));
+      //(await phantasm.connect(signer).testshit(AssetAmount,"0x1E4F97b9f9F913c46F1632781732927B9019C68b" ));
+
+      (await phantasm.connect(signer).closeLongPosition("0x1E4F97b9f9F913c46F1632781732927B9019C68b", 2, AssetAmount));
+
+
 
       console.log("open insulated long done!")
 
@@ -652,3 +662,5 @@ const daiAbi = [
 //     });
 //   });
   
+
+

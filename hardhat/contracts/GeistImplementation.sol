@@ -15,7 +15,6 @@ contract GeistImplementation {
 
 
     function leverageLong(address _asset, address _swapper, uint256 _initialCollateralAmount) external returns (uint256, uint256) {
-           uint256 a;uint256 c;
 
         IERC20(_asset).transferFrom(msg.sender, address(this), _initialCollateralAmount);
         IERC20(_asset).approve(address(geistLender), _initialCollateralAmount);
@@ -28,32 +27,28 @@ contract GeistImplementation {
         uint256 totalBorrow;
         uint256 totalCollateral = _initialCollateralAmount;
         // After 3 loops law of diminishing returns really kills you
-        for(uint i = 0; i < 2; i++){
+        for(uint i = 0; i < 3; i++){
             uint borrowAmount;
-            if( i!=0 ){
-                borrowAmount = (nextBorrow * uint256(75)/ 100) ;
-            }else{
-                borrowAmount = (nextBorrow * uint256(80)/ 100) ;
+            if( i==1 ){
+                borrowAmount = (nextBorrow * uint256(32)/ 100) ;
+            }else if(i==2){
+                borrowAmount = (nextBorrow * uint256(23)/ 100) ;
             }
-            (a,,c,,,) = geistLender.getUserAccountData(address(this));
+            else{
+                borrowAmount = (nextBorrow * uint256(50)/ 100) ;
+
+            }
 
             borrow(0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E, borrowAmount);
             totalBorrow += borrowAmount;
 
-            // (address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to
             IERC20(0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E).approve(address(_swapper), borrowAmount);
             IERC20(_asset).approve(address(_swapper), borrowAmount);
 
 
-            uint256 amtBeforeSwap = IERC20(_asset).balanceOf(address(this));
 
-            swapImplementation(_swapper).Swap(0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E, _asset, borrowAmount, 0, address(this));
+            uint256 tokensBought = swapImplementation(_swapper).Swap(0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E, _asset, borrowAmount, 0, address(this));
 
-            uint256 tokensBought = IERC20(_asset).balanceOf(address(this)) - amtBeforeSwap;
-
-
-
-            uint256 nextBorrow = tokensBought;
             // Re-approving each deposit sucks, but is signficiantly safer
             IERC20(_asset).approve(address(geistLender), tokensBought);
             deposit(_asset, tokensBought);
@@ -103,7 +98,7 @@ contract GeistImplementation {
         repay(_debtAsset, _debtOwed);
         // Now with no debt, withdraw collateral
         uint256 amountWithdrawn = withdraw(_asset, _totalCollateral);
-        IERC20(_asset).transfer(msg.sender, _totalCollateral);
+        IERC20(_asset).transfer(msg.sender, amountWithdrawn);
     }
 
     /*
@@ -123,7 +118,7 @@ contract GeistImplementation {
         IERC20(a).transferFrom(msg.sender, address(this), _amount);
         IERC20(a).approve(address(geistLender), _amount);
 
-        geistLender.deposit(a, _amount, address(this), 1);
+        geistLender.deposit(a, _amount, address(this), 0);
         geistLender.setUserUseReserveAsCollateral(a, true);
         // uint256 borrowAmount = (_amount /2) ;
         // geistLender.borrow(DAI, borrowAmount, 2, 0, address(this));
