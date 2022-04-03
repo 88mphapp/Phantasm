@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-// Some interfaces are needed here
+// Some interfaces are needed here 
 import "./interfaces/IERC20.sol";
 import './interfaces/ISwapImplementation.sol';
+import "./interfaces/ILendingPool.sol";
 
 interface ILender {
     function leverageLong(address _asset, address _swapper, uint256 _initialCollateralAmount) external returns (uint256, uint256);
     function leverageShort(address _asset, address _swapper, uint256 _initialCollateralAmount, uint256 _initialBorrowAmount, uint256 _borrowFactor) external returns (uint256, uint256);
-    function closePosition(address _debtAsset, address _asset, address _swapper, uint256 _debtOwed, uint256 _totalCollateral) external;
+    function closePosition(address _debtAsset, address test, uint256 _debtOwed, uint256 total) external returns(uint256);
     function getContractHealth() external view returns(uint256, uint256, uint256);
-    function depositMoney(uint256 _amount, address b) external ;
+    function depositMoney(uint256 _amount, address b) external returns(uint256) ;
 
 }
 
@@ -34,7 +35,6 @@ contract PhantasmManager {
         uint256 debtOwed;
         uint256 totalCollateral;
         uint64  lender;
-
     }
     // Ledger holds all token ids to tokens
     mapping(uint256 => Position) private positionLedger;
@@ -116,17 +116,19 @@ contract PhantasmManager {
         uint256 PositionID = addPosition(createdPosition);
         return PositionID;
     }
+    ILendingPool geistLender = ILendingPool(0x9FAD24f572045c7869117160A571B2e50b10d068);
 
-    function closeLongPosition(uint256 _tokenID,  uint256 _interestAccured) public {
-            require(ownership[_tokenID] == msg.sender, "You have to own something to get it's value");
-            Position memory liquidateMe = viewPosition(_tokenID);
-            //swap(address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to)
-            // DAI to repay
-            uint256 amountToRepay = _interestAccured + liquidateMe.debtOwed;
-            IERC20(DAI).transferFrom(msg.sender, address(this), amountToRepay);
-            IERC20(DAI).approve(lenderImplementation, amountToRepay);
-            ILender(lenderImplementation).closePosition(DAI, liquidateMe.asset, swapImplementation, amountToRepay, liquidateMe.totalCollateral);
+    function getDebtOwed(address asset) public returns(uint256, uint256) {
+        uint256 _debtOwed; uint256 _totalCollateral;
+        (_totalCollateral,_debtOwed,,,,) = geistLender.getUserAccountData(msg.sender);        
+            return (_debtOwed, _totalCollateral);
+    }
 
+    function closeLongPosition(address asset, uint256 _debtOwed, uint256 totalCollateral) public returns(uint256) {
+            IERC20(asset).transferFrom(msg.sender, lenderImplementation, _debtOwed);
+
+            uint256 repayAmount= ILender(lenderImplementation).closePosition(asset, msg.sender, _debtOwed,  totalCollateral);
+            return repayAmount;
     }
 
     function openShortPositionNFT(
@@ -152,17 +154,17 @@ contract PhantasmManager {
             uint256 PositionID = addPosition(createdPosition);
             return PositionID;
         }
-        function closeShortPosition(uint256 _tokenID, uint8 _swapImplementation, uint256 _interestAccured) public {
-            require(ownership[_tokenID] == msg.sender, "You have to own something to get it's value");
-            Position memory liquidateMe = viewPosition(_tokenID);
-            //swap(address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to)
-            // DAI to repay
-            uint256 amountToRepay = _interestAccured + liquidateMe.debtOwed;
-            IERC20(liquidateMe.asset).transferFrom(msg.sender, address(this), amountToRepay);
-            IERC20(liquidateMe.asset).approve(lenderImplementation, amountToRepay);
-            ILender(lenderImplementation).closePosition(liquidateMe.asset, DAI, swapImplementation, amountToRepay, liquidateMe.totalCollateral);
+    //     function closeShortPosition(uint256 _tokenID, uint8 _swapImplementation, uint256 _interestAccured) public {
+    //         require(ownership[_tokenID] == msg.sender, "You have to own something to get it's value");
+    //         Position memory liquidateMe = viewPosition(_tokenID);
+    //         //swap(address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to)
+    //         // DAI to repay
+    //         uint256 amountToRepay = _interestAccured + liquidateMe.debtOwed;
+    //         IERC20(liquidateMe.asset).transferFrom(msg.sender, address(this), amountToRepay);
+    //         IERC20(liquidateMe.asset).approve(lenderImplementation, amountToRepay);
+    //         ILender(lenderImplementation).closePosition(liquidateMe.asset, DAI, swapImplementation, amountToRepay, liquidateMe.totalCollateral);
 
-    }
+    // }
 
 /*
     _____                 _       _           _ 
@@ -226,7 +228,7 @@ contract PhantasmManager {
             // DAI to repay
             uint256 amountToRepay = amountCollected + liquidateMe.debtOwed + _tipFee;
             IERC20(DAI).approve(lenderImplementation, amountToRepay);
-            ILender(lenderImplementation).closePosition(DAI, liquidateMe.asset, swapImplementation, amountToRepay, liquidateMe.totalCollateral);
+       //     ILender(lenderImplementation).closePosition(DAI, liquidateMe.asset, swapImplementation, amountToRepay, liquidateMe.totalCollateral);
     }
 
     // function checkUnhealthyPosition(uint256 _tokenID) public view {
@@ -242,11 +244,11 @@ contract PhantasmManager {
     //         closeInsulatedLongPosition.closeInsulatedLongPosition(_token, 0);
     //     }
     // }
-    function testshit(uint256 a, address b) public {
+    function testshit(uint256 a, address b) public returns (uint256){
         IERC20(b).transferFrom(msg.sender, address(this), a);
         IERC20(b).approve(lenderImplementation, a);        
 
-        ILender(lenderImplementation).depositMoney(a,b);
+        return (ILender(lenderImplementation).depositMoney(a,b));
     }
     function getContractHealth() public view returns(uint256, uint256, uint256) {
         (uint256 a, uint256 b ,uint256 c)= ILender(lenderImplementation).getContractHealth();

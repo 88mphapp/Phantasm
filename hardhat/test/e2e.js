@@ -512,7 +512,7 @@ const daiAbi = [
 
       await spooky.deployed();
       await geist.deployed();
-      await ee.deployed();
+      await ee.deployed(); 
       await phantasm.deployed();
 
 
@@ -556,17 +556,25 @@ const daiAbi = [
       let appro2 = await CRV.approve(phantasm.address, AssetAmount);
 
       (await phantasm.connect(signer).openLongPositionNFT("0x1E4F97b9f9F913c46F1632781732927B9019C68b", 2, AssetAmount));
-      //(await phantasm.connect(signer).testshit(AssetAmount,"0x1E4F97b9f9F913c46F1632781732927B9019C68b" ));
-
-      (await phantasm.connect(signer).closeLongPosition("0x1E4F97b9f9F913c46F1632781732927B9019C68b", 2, AssetAmount));
-
-
-
+      //var idk = (await phantasm.connect(signer).callStatic.testshit(AssetAmount,"0x1E4F97b9f9F913c46F1632781732927B9019C68b" ));
+     
       console.log("open insulated long done!")
 
       a = await phantasm.connect(signer).getContractHealth();
 
       console.log(a);
+      
+      let appro3 = await CRV.approve(phantasm.address, AssetAmount);
+
+    //   let idk = (await phantasm.connect(signer).callStatic.closeLongPosition("0x1E4F97b9f9F913c46F1632781732927B9019C68b"));
+      
+    //   console.log("after closed position ")
+    //   console.log(idk)
+
+      a = await phantasm.connect(signer).getContractHealth();
+
+      console.log(a);
+
 
     });
   });

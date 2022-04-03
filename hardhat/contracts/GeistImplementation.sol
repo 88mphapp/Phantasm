@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "./interfaces/IERC20.sol";
 import "./interfaces/ILendingPool.sol";
 import "./interfaces/ISwapImplementation.sol";
+import "./interfaces/AggregatorV3Interface.sol";
 
 contract GeistImplementation {
 
@@ -15,6 +16,9 @@ contract GeistImplementation {
 
 
     function leverageLong(address _asset, address _swapper, uint256 _initialCollateralAmount) external returns (uint256, uint256) {
+        AggregatorV3Interface  priceFeed = AggregatorV3Interface(0xf4766552D15AE4d256Ad41B6cf2933482B0680dc);
+        (,int price,,,)=priceFeed.latestRoundData();
+
 
         IERC20(_asset).transferFrom(msg.sender, address(this), _initialCollateralAmount);
         IERC20(_asset).approve(address(geistLender), _initialCollateralAmount);
@@ -23,19 +27,19 @@ contract GeistImplementation {
 
         geistLender.setUserUseReserveAsCollateral(_asset, true);
 
-        uint256 nextBorrow = _initialCollateralAmount;
         uint256 totalBorrow;
         uint256 totalCollateral = _initialCollateralAmount;
         // After 3 loops law of diminishing returns really kills you
-        for(uint i = 0; i < 3; i++){
+        for(uint i = 0; i <1; i++){
             uint borrowAmount;
             if( i==1 ){
-                borrowAmount = (nextBorrow * uint256(32)/ 100) ;
+                borrowAmount = (totalCollateral * uint256(32)/ 100) ;
             }else if(i==2){
-                borrowAmount = (nextBorrow * uint256(23)/ 100) ;
-            }
-            else{
-                borrowAmount = (nextBorrow * uint256(50)/ 100) ;
+                borrowAmount = (totalCollateral * uint256(23)/ 100) ;
+            }else if(i==3){
+                borrowAmount = (totalCollateral * uint256(21)/ 100) ;
+            }else{
+                borrowAmount = ((totalCollateral * uint256(price) * uint256(55) )/ 10000000000) ;
 
             }
 
@@ -92,13 +96,14 @@ contract GeistImplementation {
         
     }
     
-    function closePosition(address _debtAsset, address _asset, address _swapper, uint256 _debtOwed, uint256 _totalCollateral) public {
-        IERC20(_debtAsset).transferFrom(msg.sender, address(this), _debtOwed);
-        IERC20(_debtAsset).approve(address(geistLender), _debtOwed);
-        repay(_debtAsset, _debtOwed);
+    function closePosition(address _asset, address _owner, uint256 _debtOwed, uint256 _totalCollateral) public returns (uint256){
+
+        IERC20(_asset).approve(address(geistLender), _debtOwed);
+        uint256 amountRepayed = geistLender.repay(_asset, _debtOwed, 2, address(this));
         // Now with no debt, withdraw collateral
-        uint256 amountWithdrawn = withdraw(_asset, _totalCollateral);
-        IERC20(_asset).transfer(msg.sender, amountWithdrawn);
+        geistLender.withdraw(_asset, _totalCollateral, address(this));
+        IERC20(_asset).transfer(_owner, _totalCollateral);
+        return amountRepayed;
     }
 
     /*
@@ -123,6 +128,7 @@ contract GeistImplementation {
         // uint256 borrowAmount = (_amount /2) ;
         // geistLender.borrow(DAI, borrowAmount, 2, 0, address(this));
 
+        //return 19;
     }
  
     function withdraw(
