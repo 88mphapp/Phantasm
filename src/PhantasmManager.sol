@@ -31,10 +31,9 @@ contract PhantasmManager {
         uint256 debtOwed;
         uint256 totalCollateral;
         uint64  lender;
-
     }
     // Ledger holds all token ids to tokens
-    mapping(uint256 => Position) private positionLedger;
+    mapping(address => Position) private positionLedger;
     uint256 counter = 0;
 
     address lenderImplementation;
