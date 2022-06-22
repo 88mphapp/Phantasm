@@ -24,7 +24,7 @@
 //     SpookySwapper testSwapper = new SpookySwapper();
 
 //     IERC20 DAI;
-//     IERC20 WFTM;
+//     IERC20 WETH;
 //     uint daiDecimals;
 //     uint wftmDecimals;
 //     address daiWhale;
@@ -57,8 +57,8 @@
 //         cheats = CheatCodes(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
 //         // Token Addresses
-//         DAI = IERC20(0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E);
-//         WFTM = IERC20(0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83);
+//         DAI = IERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
+//         WETH = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
 
 //         // Decimals
 //         daiDecimals = 18;
@@ -70,7 +70,7 @@
 
 //         // DInterst Pool 0x89242F3205a21444aF589aF94a3216b13768630E
 //         daiDInterestPool = DInterest(0xa78276C04D8d807FeB8271fE123C1f94c08A414d); // This Should Be DAI Via Scream Pool: Default - 0xa78276C04D8d807FeB8271fE123C1f94c08A414d
-//         dInterestLens = DInterestLens(0x162083f8096f54d68c6a5f8E86adB400FfC4b201);
+//         dInterestLens = DInterestLens(0xc0FcF8403e10B65f1D18f1B81b093004B1127275);
 
 //         // Instantiate Contracts
 //         testManager = new PhantasmManager(0x9FAD24f572045c7869117160A571B2e50b10d068, address(testEEIntegration), address(testSwapper));        

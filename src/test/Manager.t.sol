@@ -3,13 +3,14 @@ pragma solidity 0.8.12;
 
 import "./utils/console.sol";
 import "../../lib/ds-test/src/test.sol";
-import {SpookySwapper} from "../SpookySwap.sol";
+import {AaveSwap} from "../AaveSwap.sol";
 import {IERC20} from "../interfaces/IERC20.sol";
-import {GeistImplementation} from "../geistImplementation.sol";
+import {AaveImplementation} from "../AaveImplementation.sol";
 import {PhantasmManager} from "../PhantasmManager.sol";
-import "../interfaces/IlendingPoolAddressesProvider.sol";
 import {EEIntegration} from "../EEImplementation.sol";
 import {DInterest} from "../interfaces/IDinterest.sol";
+import "../interfaces/IlendingPoolAddressesProvider.sol";
+import "../interfaces/ILendingPool.sol";
 
 interface Vm {
     function prank(address) external;
@@ -20,63 +21,91 @@ interface Vm {
 }
 
 contract PhantasmManagertest is DSTest {
-    EEIntegration testEEIntegration = new EEIntegration();
-    SpookySwapper testSwapper = new SpookySwapper();
     DInterest daiDInterestPool;
     PhantasmManager test;
-    GeistImplementation testgeist;
-
+    AaveSwap testSwapper;
+    AaveImplementation AaveTest;
 
     IERC20 dai;
     IERC20 TOMB;
-    IERC20 WFTM;
+    IERC20 WETH;
     IERC20 DAI;
 
     Vm vm = Vm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
     function setUp() public {
-        testgeist = new GeistImplementation();        
-        test = new PhantasmManager(address(testgeist), address(testEEIntegration), address(testSwapper));        
-        
+        testSwapper = new AaveSwap();
+        AaveTest = new AaveImplementation();
+        EEIntegration testEEIntegration = new EEIntegration();
+        test = new PhantasmManager(address(AaveTest), address(testEEIntegration), address(testSwapper));        
+
         DAI = IERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
         WETH = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     }
 
     function testManager() public {
         vm.startPrank(0x27182842E098f60e3D576794A5bFFb0777E025d3);  //dai and weth whale
-        uint256 _amount = 10000 * 1e18;
+        uint256 _amount  = 10000 * 1e18;
         uint256 _amount2 = 1000 * 1e18;
+        uint256 _amount3 = 100000 * 1e18;
 
-        DAI.transfer(address(testEEIntegration), 100000 * (10**18));
-        DAI.transfer(address(0xcDc39431BFa67BCfDD6158BE5a74AE1cd37Bd1D1), 80000 * (10**18));
+        //DAI.transfer(address(testEEIntegration), 100000 * (10**18));
+        //uint64 maturationTimestamp = 1647804453;
+        //DAI.approve(address(testEEIntegration), _amount2);
+        //daiDInterestPool = DInterest(0xa78276C04D8d807FeB8271fE123C1f94c08A414d); // This Should Be DAI Via Scream Pool: Default - 0xa78276C04D8d807FeB8271fE123C1f94c08A414d
+        //(uint64 depositId,) = testEEIntegration.makeDeposit(address(daiDInterestPool), _amount2, maturationTimestamp);
+        ILendingPool geistLender = ILendingPool(
+            0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9
+        );
 
-        console.log("sent balance");
+        (uint256 totalCollateralETH,uint256 totalDebtETH, uint256 availableBorrowsETH, ,  , ) = geistLender.getUserAccountData(address(AaveTest));
+        console.log("before long total borrowable", availableBorrowsETH);
+        console.log("before long total colateral", totalCollateralETH);
+        console.log("before long total debt", totalDebtETH);
 
-        uint64 maturationTimestamp = 1647804453;
+        console.log("DAI balance", DAI.balanceOf(address(0x27182842E098f60e3D576794A5bFFb0777E025d3)));
+        console.log("WETH balance", WETH.balanceOf(address(0x27182842E098f60e3D576794A5bFFb0777E025d3)));
 
-        vm.stopPrank();
-
-        vm.startPrank(0xcDc39431BFa67BCfDD6158BE5a74AE1cd37Bd1D1);  //ftm and wftm whale
-
-        DAI.approve(address(testEEIntegration), _amount2);
-        
-        daiDInterestPool = DInterest(0xa78276C04D8d807FeB8271fE123C1f94c08A414d); // This Should Be DAI Via Scream Pool: Default - 0xa78276C04D8d807FeB8271fE123C1f94c08A414d
-
-        (uint64 depositId,) = testEEIntegration.makeDeposit(address(daiDInterestPool), _amount2, maturationTimestamp);
-        
-        console.log("dai balance", DAI.balanceOf(0xcDc39431BFa67BCfDD6158BE5a74AE1cd37Bd1D1));
-        console.log("WFTM balance", WFTM.balanceOf(0xcDc39431BFa67BCfDD6158BE5a74AE1cd37Bd1D1));
-
-        console.log("depositid", depositId);
-
-        WFTM.approve(address(test), _amount);
+        WETH.approve(address(test), _amount);
         DAI.approve(address(test), _amount2);
 
         uint256 factor = 2;
 
-        uint256 positionId = test.openInsulatedLongPositionNFT(address(WFTM), factor , _amount, depositId, _amount2);
+        uint256 positionId = test.openLongPositionNFT(address(WETH), factor , _amount);
 
-        console.log(positionId);
+        console.log("position Opened", positionId);
+        console.log("DAI balance", DAI.balanceOf(address(0x27182842E098f60e3D576794A5bFFb0777E025d3)));
+
+        DAI.approve(address(test), _amount3);
+
+
+        geistLender = ILendingPool(
+            0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9
+        );
+
+        ( totalCollateralETH, totalDebtETH,  availableBorrowsETH, ,  , ) = geistLender.getUserAccountData(address(AaveTest));
+        console.log("after long total borrowable", availableBorrowsETH);
+        console.log("after long total colateral", totalCollateralETH);
+        console.log("after long total debt", totalDebtETH);
+
+
+
+
+        test.closeLongPosition(address(WETH), address(testSwapper));
+
+
+        geistLender = ILendingPool(
+            0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9
+        );
+
+        ( totalCollateralETH, totalDebtETH,  availableBorrowsETH, ,  , ) = geistLender.getUserAccountData(address(AaveTest));
+        console.log("after close total borrowable", availableBorrowsETH);
+        console.log("after close total colateral", totalCollateralETH);
+        console.log("after close total debt", totalDebtETH);
+
+        console.log("DAI balance", DAI.balanceOf(address(0x27182842E098f60e3D576794A5bFFb0777E025d3)));
+        console.log("WETH balance", WETH.balanceOf(address(0x27182842E098f60e3D576794A5bFFb0777E025d3)));
+
 
         vm.stopPrank();
 

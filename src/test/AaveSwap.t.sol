@@ -5,6 +5,7 @@ import "./utils/console.sol";
 import "../../lib/ds-test/src/test.sol";
 import {AaveSwap} from "../AaveSwap.sol";
 import {AaveImplementation} from "../AaveImplementation.sol";
+import {EEIntegration} from "../EEImplementation.sol";
 import {IERC20} from "../interfaces/IERC20.sol";
 import "../interfaces/IlendingPoolAddressesProvider.sol";
 import "../interfaces/IAave.sol";
@@ -31,6 +32,8 @@ contract AaveSwapTest is DSTest {
     function setUp() public {
         testSwapper = new AaveSwap();
         test = new AaveImplementation();
+        EEIntegration testEEIntegration = new EEIntegration();
+
         DAI = IERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
         WETH = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     }
@@ -108,40 +111,75 @@ contract AaveSwapTest is DSTest {
 
     // }
 
-    function testLeverageLongDAI() public {
-        vm.startPrank(0x1C11BA15939E1C16eC7ca1678dF6160Ea2063Bc5); //test weth
+    // function testLeverageLongDAI() public {
+    //     vm.startPrank(0x1C11BA15939E1C16eC7ca1678dF6160Ea2063Bc5); //test weth
 
-        console.log("WETH balance of gesit", WETH.balanceOf(address(test)));
-        console.log(
-            "DAI balance of geist before transfer",
-            DAI.balanceOf(address(test))
-        );
+    //     console.log("WETH balance of gesit", WETH.balanceOf(address(test)));
+    //     console.log(
+    //         "DAI balance of geist before transfer",
+    //         DAI.balanceOf(address(test))
+    //     );
 
-        console.log("aaveswap address", (address(testSwapper)));
+    //     console.log("aaveswap address", (address(testSwapper)));
 
-        uint256 _amount = 1000 * 1e18;
+    //     uint256 _amount = 1000 * 1e18;
 
-        WETH.approve(address(test), _amount);
+    //     WETH.approve(address(test), _amount);
 
-        test.leverageLong(address(WETH), address(testSwapper), _amount);
+    //     test.leverageLong(address(WETH), address(testSwapper), _amount);
 
-        console.log(
-            "WETH balance of geist after transfer",
-            WETH.balanceOf(address(test))
-        );
+    //     console.log(
+    //         "WETH balance of geist after transfer",
+    //         WETH.balanceOf(address(test))
+    //     );
 
-        ILendingPool geistLender = ILendingPool(
-            0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9
-        );
+    //     ILendingPool geistLender = ILendingPool(
+    //         0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9
+    //     );
 
-        (uint256 totalCollateralETH, uint256 totalDebtETH, uint256 availableBorrowsETH, , , ) = geistLender.getUserAccountData(address(test));
+    //     (uint256 totalCollateralETH, uint256 totalDebtETH, uint256 availableBorrowsETH, , , ) = geistLender.getUserAccountData(address(test));
 
-        console.log("availableBorrowsETH ", availableBorrowsETH)
-        console.log("totalCollateralETH ", totalCollateralETH)
-        console.log("totalDebtETH ", totalDebtETH)
+    //     console.log("availableBorrowsETH ", availableBorrowsETH)
+    //     console.log("totalCollateralETH ", totalCollateralETH)
+    //     console.log("totalDebtETH ", totalDebtETH)
 
-        vm.stopPrank();
-    }
+    //     vm.stopPrank();
+    // }
+
+    //     function testopenPositionNFT() public {
+    //     vm.startPrank(0x1C11BA15939E1C16eC7ca1678dF6160Ea2063Bc5); //test weth
+
+    //     console.log("WETH balance of gesit", WETH.balanceOf(address(test)));
+    //     console.log(
+    //         "DAI balance of geist before transfer",
+    //         DAI.balanceOf(address(test))
+    //     );
+
+    //     console.log("aaveswap address", (address(testSwapper)));
+
+    //     uint256 _amount = 1000 * 1e18;
+
+    //     WETH.approve(address(test), _amount);
+
+    //     test.leverageLong(address(WETH), address(testSwapper), _amount);
+
+    //     console.log(
+    //         "WETH balance of geist after transfer",
+    //         WETH.balanceOf(address(test))
+    //     );
+
+    //     ILendingPool geistLender = ILendingPool(
+    //         0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9
+    //     );
+
+    //     (uint256 totalCollateralETH, uint256 totalDebtETH, uint256 availableBorrowsETH, , , ) = geistLender.getUserAccountData(address(test));
+
+    //     console.log("availableBorrowsETH ", availableBorrowsETH)
+    //     console.log("totalCollateralETH ", totalCollateralETH)
+    //     console.log("totalDebtETH ", totalDebtETH)
+
+    //     vm.stopPrank();
+    // }
 
     // function testMakeDeposit() public {
     //     vm.startPrank(0x6Ab30d124cf23aEaEd9Aff8887b2E73f034796ca); //dai and ftm whale

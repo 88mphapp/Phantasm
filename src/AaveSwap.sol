@@ -18,10 +18,8 @@ contract AaveSwap {
         uint _amountOutMin,
         address _to
     ) public returns(uint) {
-        console.log("we here");
         IERC20(_tokenIn).transferFrom(msg.sender, address(this), _amountIn);
         IERC20(_tokenIn).approve(UNISWAP_V2_ROUTER, _amountIn);
-        console.log("we here");
 
         address[] memory path;
         if (_tokenIn == WETH || _tokenOut == WETH) {
@@ -34,7 +32,6 @@ contract AaveSwap {
             path[1] = WETH;
             path[2] = _tokenOut;
         }
-        console.log("we here");
 
         uint[] memory test = IUniswapV2Router(UNISWAP_V2_ROUTER)
             .swapExactTokensForTokens(
@@ -45,15 +42,12 @@ contract AaveSwap {
                 block.timestamp
             );
 
-        console.log(test[0], "ifm");
-        console.log(test[1], "ifm");
 
         IERC20(_tokenOut).transfer(
             msg.sender,
             IERC20(_tokenOut).balanceOf(address(this))
         );
 
-        console.log("heh");
         return test[1];
     }
 

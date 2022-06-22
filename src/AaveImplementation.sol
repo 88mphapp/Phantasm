@@ -31,32 +31,21 @@ contract AaveImplementation {
             _initialCollateralAmount
         );
         IERC20(_asset).approve(address(aaveLender), _initialCollateralAmount);
-        console.log("1");
-        console.log(IERC20(WETH).balanceOf(address(this)));
 
         deposit(_asset, _initialCollateralAmount);
-        console.log("1");
-        console.log(IERC20(WETH).balanceOf(address(this)));
 
         aaveLender.setUserUseReserveAsCollateral(_asset, true);
         uint256 nextBorrow = _initialCollateralAmount;
         uint256 totalBorrow;
         uint256 totalCollateral = _initialCollateralAmount;
-        console.log("1");
 
         // After 3 loops law of diminishing returns really kills you
         for (uint i = 0; i < 2; i++) {
             uint borrowAmount = ((totalCollateral * uint256(32)) / 100);
-            console.log(borrowAmount);
-            console.log(totalCollateral);
-            console.log(IERC20(DAI).balanceOf(address(this)));
-
             borrow(DAI, borrowAmount);
             totalBorrow += borrowAmount;
             // (address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to
             IERC20(DAI).approve(_swapper, borrowAmount);
-            console.log(IERC20(DAI).balanceOf(address(this)));
-             
             IERC20(address(DAI)).approve(_swapper, borrowAmount);
 
             uint256 tokensBought = swapImplementation(_swapper).swap(
@@ -73,7 +62,14 @@ contract AaveImplementation {
             deposit(_asset, tokensBought);
             totalCollateral += tokensBought;
         }
-        return (totalBorrow, totalCollateral);
+
+        ILendingPool geistLender = ILendingPool(
+            0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9
+        );
+
+        (uint256 totalCollateralETH,uint256 totalDebtETH, uint256 availableBorrowsETH, ,  , ) = geistLender.getUserAccountData(address(this));
+
+        return (totalDebtETH, totalCollateralETH);
     }
 
     function leverageShort(
@@ -119,14 +115,34 @@ contract AaveImplementation {
         address _asset,
         address _swapper,
         uint256 _debtOwed,
-        uint256 _totalCollateral
+        uint256 _totalCollateral,
+        address _sender
     ) public {
         IERC20(_debtAsset).transferFrom(msg.sender, address(this), _debtOwed);
         IERC20(_debtAsset).approve(address(aaveLender), _debtOwed);
-        repay(_debtAsset, _debtOwed);
+        console.log("closeposition ", _debtOwed);
+
+        uint256 amountRepayed = repay(_debtAsset, _debtOwed);
+        console.log("after repay ", amountRepayed);
+
+        ILendingPool geistLender = ILendingPool(
+            0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9
+        );
+
+        (uint256 totalCollateralETH,uint256 totalDebtETH, uint256 availableBorrowsETH, ,  , ) = geistLender.getUserAccountData(address(this));
+        console.log("after repay total borrowable", availableBorrowsETH);
+        console.log("after repay total colateral", totalCollateralETH);
+        console.log("after repay total debt", totalDebtETH);
+
+
         // Now with no debt, withdraw collateral
-        uint256 amountWithdrawn = withdraw(_asset, _totalCollateral);
-        IERC20(_asset).transfer(msg.sender, _totalCollateral);
+        uint256 amountWithdrawn = withdraw(_asset, availableBorrowsETH);
+        console.log("closeposition", amountWithdrawn);
+
+        if(amountWithdrawn > 0 ){
+          IERC20(_asset).transfer(_sender, _totalCollateral);
+        }
+
     }
 
     /*

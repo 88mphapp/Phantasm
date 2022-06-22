@@ -21,9 +21,9 @@ interface bondImplementation {
 
 contract EEIntegration is ERC1155Holder, IERC721Receiver {
 
-    IERC20 public WETH = IERC20(0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83); // Wrapped Fantom Address
-    IERC20 public dai = IERC20(0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E); // Dai on Fantom
-    DInterest public daiViaAavePool = DInterest(0x89242F3205a21444aF589aF94a3216b13768630E); // DAI via Scream => Implementation 0x89242F3205a21444aF589aF94a3216b13768630E
+    IERC20 public WETH = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2); // Wrapped Fantom Address
+    IERC20 public dai = IERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F); // Dai on Fantom
+    DInterest public daiViaAavePool = DInterest(0x11B1c87983F881B3686F8b1171628357FAA30038); // DAI via Scream => Implementation 0x89242F3205a21444aF589aF94a3216b13768630E
     // DInterest public ftmViaAavePool = DInterest(); // Find the other pool for SHORTING
     //DInterest public daiViaCompoundPool = DInterest(0x11B1c87983F881B3686F8b1171628357FAA30038);
     //address PhantasmManager;

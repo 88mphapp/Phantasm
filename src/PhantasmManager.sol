@@ -9,7 +9,7 @@ import "./test/utils/console.sol";
 interface ILender {
     function leverageLong(address _asset, address _swapper, uint256 _initialCollateralAmount) external returns (uint256, uint256);
     function leverageShort(address _asset, address _swapper, uint256 _initialCollateralAmount, uint256 _initialBorrowAmount, uint256 _borrowFactor) external returns (uint256, uint256);
-    function closePosition(address _debtAsset, address _asset, address _swapper, uint256 _debtOwed, uint256 _totalCollateral) external;
+    function closePosition(address _debtAsset, address _asset, address _swapper, uint256 _debtOwed, uint256 _totalCollateral, address sender) external;
 }
 
 interface IBond {
@@ -20,7 +20,7 @@ interface IBond {
 contract PhantasmManager {
 
     address private owner;
-    address private immutable DAI = 0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E;
+    address private immutable DAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
     address private immutable DAIDinterest = 0xa78276C04D8d807FeB8271fE123C1f94c08A414d;
 
     struct Position {
@@ -30,7 +30,6 @@ contract PhantasmManager {
         address stablecoin;
         uint256 debtOwed;
         uint256 totalCollateral;
-        uint64  lender;
     }
     // Ledger holds all token ids to tokens
     mapping(address => Position) private positionLedger;
@@ -66,14 +65,14 @@ contract PhantasmManager {
         return counter;
     }
     
-    function removePosition(uint256 _tokenID) internal {
-        ownership[_tokenID] = address(this); // Remove ownership from Positon
+    // function removePosition(address _tokenID) internal {
+    //     ownership[_tokenID] = address(this); // Remove ownership from Positon
 
-        delete positionLedger[_tokenID];
-    }
-    function viewPosition(uint256 _tokenID) public view returns(Position memory) {
-        return positionLedger[_tokenID];
-    }
+    //     delete positionLedger[_tokenID];
+    // }
+    // function viewPosition(address user) public view returns(Position memory) {
+    //     return positionLedger[user];
+    // }
 
 
     /*
@@ -92,36 +91,45 @@ contract PhantasmManager {
         uint256 _borrowFactor,
         uint256 _assetAmount
 ) public returns (uint256) {
-        //function leverageLong(address _longToken, uint256 _borrowAmount, uint256 _borrowFactor, address _swapImplementation) external;
-        // Just to see the functions its actually calling because this part is a bit of a mess
+
         IERC20(_longToken).transferFrom(msg.sender, address(this), _assetAmount);
         IERC20(_longToken).approve(lenderImplementation, _assetAmount);
-        (uint256 totalBorrow, uint256 totalCollateral) = ILender(lenderImplementation).leverageLong(_longToken, swapImplementation, _assetAmount);
-        
+
+        (uint256 totalDebtETH, uint256 totalCollateral) = ILender(lenderImplementation).leverageLong(_longToken, swapImplementation, _assetAmount);
 
         Position memory createdPosition;
 
         createdPosition.isLong = true;
         createdPosition.isInsulated = false;
         createdPosition.asset = _longToken;
-        createdPosition.debtOwed = totalBorrow;
+        createdPosition.debtOwed = totalDebtETH;
         createdPosition.stablecoin = DAI; // DAI for now
         createdPosition.totalCollateral = totalCollateral;
 
+        positionLedger[msg.sender] = createdPosition;
 
-        uint256 PositionID = addPosition(createdPosition);
-        return PositionID;
+        console.log("totalCollateral ", totalCollateral);
+        console.log("totalDebtETH ", totalDebtETH);
+
+
+        return 2;
     }
 
-    function closeLongPosition(uint256 _tokenID, uint8 _swapImplementation, uint256 _interestAccured) public {
-            require(ownership[_tokenID] == msg.sender, "You have to own something to get it's value");
-            Position memory liquidateMe = viewPosition(_tokenID);
+    function closeLongPosition(address _tokenID, address _swapImplementation) public {
+            require(positionLedger[msg.sender].totalCollateral> 0, "You have to own something to get it's value");
+            //Position memory liquidateMe = viewPosition(_tokenID);
             //swap(address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to)
             // DAI to repay
-            uint256 amountToRepay = _interestAccured + liquidateMe.debtOwed;
-            IERC20(DAI).transferFrom(msg.sender, address(this), amountToRepay);
+
+            uint256 amountToRepay = 50 + positionLedger[msg.sender].debtOwed;
+            uint256 totalCollateral = positionLedger[msg.sender].totalCollateral;
+            console.log("amount to repay", amountToRepay);
+            console.log("totalCollateral", totalCollateral);
+
+            IERC20(DAI).transferFrom(msg.sender, address(this) , amountToRepay);
+
             IERC20(DAI).approve(lenderImplementation, amountToRepay);
-            ILender(lenderImplementation).closePosition(DAI, liquidateMe.asset, swapImplementation, amountToRepay, liquidateMe.totalCollateral);
+            ILender(lenderImplementation).closePosition(address(DAI), _tokenID, _swapImplementation, amountToRepay, totalCollateral, msg.sender);
 
     }
 
@@ -149,14 +157,14 @@ contract PhantasmManager {
             return PositionID;
         }
         function closeShortPosition(uint256 _tokenID, uint8 _swapImplementation, uint256 _interestAccured) public {
-            require(ownership[_tokenID] == msg.sender, "You have to own something to get it's value");
-            Position memory liquidateMe = viewPosition(_tokenID);
-            //swap(address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to)
-            // DAI to repay
-            uint256 amountToRepay = _interestAccured + liquidateMe.debtOwed;
-            IERC20(liquidateMe.asset).transferFrom(msg.sender, address(this), amountToRepay);
-            IERC20(liquidateMe.asset).approve(lenderImplementation, amountToRepay);
-            ILender(lenderImplementation).closePosition(liquidateMe.asset, DAI, swapImplementation, amountToRepay, liquidateMe.totalCollateral);
+            // require(ownership[_tokenID] == msg.sender, "You have to own something to get it's value");
+            // Position memory liquidateMe = viewPosition(_tokenID);
+            // //swap(address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to)
+            // // DAI to repay
+            // uint256 amountToRepay = _interestAccured + liquidateMe.debtOwed;
+            // IERC20(liquidateMe.asset).transferFrom(msg.sender, address(this), amountToRepay);
+            // IERC20(liquidateMe.asset).approve(lenderImplementation, amountToRepay);
+            // ILender(lenderImplementation).closePosition(liquidateMe.asset, DAI, swapImplementation, amountToRepay, liquidateMe.totalCollateral);
 
     }
 
@@ -209,7 +217,7 @@ contract PhantasmManager {
         createdPosition.debtOwed = totalBorrow;
         createdPosition.stablecoin = DAI; // DAI for now
         createdPosition.totalCollateral = totalCollateral;
-        createdPosition.lender = 0;
+        //createdPosition.lender = 0;
 
                 console.log("after tranfer 1");
 
@@ -220,17 +228,17 @@ contract PhantasmManager {
     }
 
     function closeInsulatedLongPosition(uint256 _tokenID, uint256 _tipFee) public {
-        require(ownership[_tokenID] == msg.sender, "You have to own something to get it's value");
-        // _tipFee is just incase bond doesn't accure exactly the same and you need to give it a lil boost
-            Position memory liquidateMe = viewPosition(_tokenID);
-            require(liquidateMe.isInsulated, "Position is not Insulated");
-            IERC20(DAI).transferFrom(msg.sender, address(this), liquidateMe.debtOwed + _tipFee);
-            uint256 amountCollected = IBond(bondImplementation).collectAllInterest(liquidateMe.stablecoin);
-            //swap(address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to)
-            // DAI to repay
-            uint256 amountToRepay = amountCollected + liquidateMe.debtOwed + _tipFee;
-            IERC20(DAI).approve(lenderImplementation, amountToRepay);
-            ILender(lenderImplementation).closePosition(DAI, liquidateMe.asset, swapImplementation, amountToRepay, liquidateMe.totalCollateral);
+        // require(ownership[_tokenID] == msg.sender, "You have to own something to get it's value");
+        // // _tipFee is just incase bond doesn't accure exactly the same and you need to give it a lil boost
+        //     Position memory liquidateMe = viewPosition(_tokenID);
+        //     require(liquidateMe.isInsulated, "Position is not Insulated");
+        //     IERC20(DAI).transferFrom(msg.sender, address(this), liquidateMe.debtOwed + _tipFee);
+        //     uint256 amountCollected = IBond(bondImplementation).collectAllInterest(liquidateMe.stablecoin);
+        //     //swap(address _tokenIn, address _tokenOut, uint _amountIn, uint _amountOutMin, address _to)
+        //     // DAI to repay
+        //     uint256 amountToRepay = amountCollected + liquidateMe.debtOwed + _tipFee;
+        //     IERC20(DAI).approve(lenderImplementation, amountToRepay);
+        //     ILender(lenderImplementation).closePosition(DAI, liquidateMe.asset, swapImplementation, amountToRepay, liquidateMe.totalCollateral);
     }
 
 }
